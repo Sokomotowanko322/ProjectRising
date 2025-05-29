@@ -1,7 +1,7 @@
 enum class ColliderType 
 {
     Player,
+    Weapon,
     Enemy,
-    Bullet,
     Stage
 };

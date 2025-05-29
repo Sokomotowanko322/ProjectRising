@@ -23,7 +23,7 @@ void GameScene::Init(void)
 	player_->Init();
 
 	// 敵の初期化
-	normalEnemy_ = std::make_shared<NormalEnemy>();
+	normalEnemy_ = std::make_shared<NormalEnemy>(player_);
 	normalEnemy_->Init();
 
 	// スカイドーム

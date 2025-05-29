@@ -145,8 +145,8 @@ void Player::ProcessInput(void)
 		weapon_->StartEffect();
 		// アニメーションが終わったか判定
 		if (animationController_->IsEndBlendingPlayAnimation("SMASH") ||
-			animationController_->IsEndBlendingPlayAnimation("FIRST_COMBO") ||
-			animationController_->IsEndBlendingPlayAnimation("HIGHTIME"))
+			animationController_->IsEndBlendingPlayAnimation("HIGHTIME")||
+			animationController_->IsEndBlendingPlayAnimation("FIRST_COMBO"))
 		{
 			isAttack_ = false;
 		}
@@ -308,6 +308,11 @@ void Player::MoveControl(void)
 	{
 		stepRotTime_ = TIMEROT_NORMAL;
 	}
+}
+
+const VECTOR& Player::GetPos() const
+{
+	return transform_.pos;
 }
 
 const VECTOR& Player::GetRightHandPos() const

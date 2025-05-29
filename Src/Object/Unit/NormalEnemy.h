@@ -3,6 +3,8 @@
 #include <vector>
 #include "ActorBase.h"
 
+class Player;
+
 class NormalEnemy : public ActorBase
 {
 public:
@@ -35,7 +37,7 @@ public:
 	};
 
 	// コンストラクタ
-	NormalEnemy();
+	NormalEnemy(std::weak_ptr<Player> player);
 	~NormalEnemy();
 	
 	// 初期化
@@ -55,6 +57,9 @@ protected:
 
 	
 private:
+
+	// アニメーションコントローラ
+	std::unique_ptr<AnimationController> animationController_;
 	
 	// アニメーションの初期化
 	void InitAnimation(void);
@@ -82,7 +87,16 @@ private:
 	void UpdateWalk(void);
 	void UpdateAttack(void);
 
-	// アニメーションコントローラ
-	std::unique_ptr<AnimationController> animationController_;
+	// 回転の差分
+	VECTOR diff_;
+	
+	// クォータニオン回転
+	Quaternion rot_;
+
+	// 回転の内積
+	float dot_;
+	
+	// 回転のステップ
+	float rotationStep_;
 };
 

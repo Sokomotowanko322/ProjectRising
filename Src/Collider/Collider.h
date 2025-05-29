@@ -1,16 +1,33 @@
-#include <Dxlib.h>
-#include <string>
-#include <vector>
+#pragma once
 #include <memory>
-#include <unordered_map>
-#include "ColliderType.h"
+#include <DxLib.h>
 
-class Transform;
+class ActorBase; // 前方宣言
 
-/// <summary>
-/// コライダ情報を保持するクラス
-/// </summary>
-class Collider
+class Collider 
 {
-};
+public:
 
+    enum class Type 
+    {
+        Player,
+        Enemy,
+		Weapon,
+    };
+
+    Collider(Type type, ActorBase* owner);
+    virtual ~Collider();
+
+    virtual bool CheckCollision(const Collider& other) const = 0;
+
+    Type GetType() const;
+    ActorBase* GetOwner() const;
+
+protected:
+
+    Type type_;
+
+    // 所有者
+    ActorBase* owner_;
+
+};

@@ -58,6 +58,7 @@ public:
 	void SetPos(const VECTOR& pos);
 
 	// Žæ“¾Œn
+	const VECTOR& GetPos() const;
 	const VECTOR& GetRightHandPos() const;
 	const VECTOR& GetAngles() const;
 

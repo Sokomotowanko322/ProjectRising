@@ -4,6 +4,7 @@
 
 class SceneManager;
 class ResourceManager;
+class Player;
 
 class ActorBase
 {
@@ -33,6 +34,8 @@ protected:
     ResourceManager& resMng_;
     SceneManager& scnMng_;
 
+	// プレイヤーの参照
+    std::weak_ptr<Player> player_;
     
 #pragma region パラメーター
 
