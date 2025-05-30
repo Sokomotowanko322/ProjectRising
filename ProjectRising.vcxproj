@@ -135,12 +135,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Collider\Capsule.cpp" />
+    <ClCompile Include="Src\Collider\Collider.cpp" />
     <ClCompile Include="Src\Object\Unit\NormalEnemy.cpp" />
     <ClCompile Include="Src\Object\SkyDome.cpp" />
     <ClCompile Include="Src\Controller\AnimationController.cpp" />
     <ClCompile Include="Src\Scene\GameScene.cpp" />
     <ClCompile Include="Src\Controller\ColliderController.cpp" />
-    <ClCompile Include="Src\Collider\Collider.cpp" />
     <ClCompile Include="Src\Scene\SceneBase.cpp" />
     <ClCompile Include="Src\Manager\Resource.cpp" />
     <ClCompile Include="Src\Manager\ResourceManager.cpp" />
@@ -165,13 +166,14 @@
     <ClCompile Include="Src\Object\Weapon.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Src\Collider\Capsule.h" />
+    <ClInclude Include="Src\Collider\Collider.h" />
     <ClInclude Include="Src\Object\Unit\NormalEnemy.h" />
     <ClInclude Include="Src\Object\SkyDome.h" />
     <ClInclude Include="Src\Controller\AnimationController.h" />
     <ClInclude Include="Src\Scene\GameScene.h" />
     <ClInclude Include="Src\Collider\ColliderType.h" />
     <ClInclude Include="Src\Controller\ColliderController.h" />
-    <ClInclude Include="Src\Collider\Collider.h" />
     <ClInclude Include="Src\Scene\SceneBase.h" />
     <ClInclude Include="Src\Manager\Resource.h" />
     <ClInclude Include="Src\Manager\ResourceManager.h" />

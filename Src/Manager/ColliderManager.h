@@ -1,23 +1,20 @@
 #pragma once
 #include <vector>
 #include <memory>
-#include "../Collider/Collider.h"
+#include "../Collider/ColliderBase.h"
 
 class ColliderManager 
 {
+
 public:
-
-    // コライダを付ける
-    void AddCollider(std::shared_ptr<Collider> collider);
-
-	// コライダを外す
-    void RemoveCollider(std::shared_ptr<Collider> collider);
-
-    // 衝突判定などの更新
-    void Update(); 
+    
+    // コライダの設定
+    void AddCollider(const std::shared_ptr<ColliderBase>& collider);
+    void Update();
+    void Draw() const;
+    void Clear();
 
 private:
-
-	// コライダのリスト
-    std::vector<std::shared_ptr<Collider>> colliders_;
+    
+    std::vector<std::shared_ptr<ColliderBase>> colliders;
 };

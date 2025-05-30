@@ -1,33 +1,28 @@
 #pragma once
-#include <memory>
-#include <DxLib.h>
-
-class ActorBase; // 前方宣言
-
-class Collider 
+class Collider
 {
+
 public:
 
-    enum class Type 
-    {
-        Player,
-        Enemy,
-		Weapon,
-    };
+	// 衝突種別
+	enum class TYPE
+	{
+		PLAYER,
+		ENEMY,
+		WEAPON,
+		STAGE,
+	};
 
-    Collider(Type type, ActorBase* owner);
-    virtual ~Collider();
+	// コンストラクタ
+	Collider(TYPE type, int modelId);
 
-    virtual bool CheckCollision(const Collider& other) const = 0;
+	// デストラクタ
+	~Collider(void);
 
-    Type GetType() const;
-    ActorBase* GetOwner() const;
+	// 衝突種別
+	TYPE type_;
 
-protected:
-
-    Type type_;
-
-    // 所有者
-    ActorBase* owner_;
+	// モデルのハンドルID
+	int modelId_;
 
 };

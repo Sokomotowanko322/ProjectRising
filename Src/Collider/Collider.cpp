@@ -1,24 +1,11 @@
 #include "Collider.h"
 
-Collider::Collider(Type type, ActorBase* owner)
+Collider::Collider(TYPE type, int modelId)
 {
+	type_ = type;
+	modelId_ = modelId;
 }
 
-Collider::~Collider()
+Collider::~Collider(void)
 {
-}
-
-bool Collider::CheckCollision(const Collider& other) const
-{
-	return false;
-}
-
-Collider::Type Collider::GetType() const
-{
-	return type_;
-}
-
-ActorBase* Collider::GetOwner() const
-{
-	return owner_;
 }
