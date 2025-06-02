@@ -42,16 +42,28 @@ Player::Player() : ActorBase(),
 weapon_(std::make_shared<Weapon>()),
 animationController_(nullptr),
 moveForwardCount_(0),
-moveDir_(Utility::VECTOR_ZERO), 
-movePow_(Utility::VECTOR_ZERO), 
+moveDir_(Utility::VECTOR_ZERO),
+movePow_(Utility::VECTOR_ZERO),
 stepRotTime_(0.0f),
 moveSpeed_(0.0f),
 goalQuaRot_(Quaternion()),
 playerRotY_(Quaternion()),
 isAttack_(false),
-preForwardPressed_(false)
+readyHighTime_(false),
+preForwardPressed_(false),
+preBackPressed_(false),
+armAnimId_(-1),
+frameNo_(-1),
+legsAnimId_(-1), 
+rightHandFrame_(-1),
+rightHandPos_(Utility::VECTOR_ZERO),
+rotRad_(0.0f)
 {
-
+   // ColliderèÓïÒèâä˙âª
+   collider_.shape = ColliderShape::Capsule;
+   collider_.capsule.basePos = transform_.pos;
+   collider_.capsule.radius = 0.5f;
+   collider_.capsule.height = 1.8f;
 }
 
 Player::~Player()
@@ -318,6 +330,11 @@ const VECTOR& Player::GetPos() const
 const VECTOR& Player::GetRightHandPos() const
 {
 	return rightHandPos_;
+}
+
+const ColliderData& Player::GetColliderData() const
+{
+	return collider_;
 }
 
 void Player::InitAnimation(void)

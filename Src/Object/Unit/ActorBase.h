@@ -1,6 +1,6 @@
 #pragma once
-#include "../../Object/Transform.h"
 #include <DxLib.h>
+#include "../../Object/Transform.h"
 
 class SceneManager;
 class ResourceManager;

@@ -1,9 +1,10 @@
 #include "ActorBase.h"
+#include "../../Collider/ColliderBase.h"
 
 class AnimationController;
 class Weapon; 
 
-class Player : public ActorBase
+class Player : public ActorBase, public ColliderBase
 {
 public:
 
@@ -60,9 +61,13 @@ public:
 	// 取得系
 	const VECTOR& GetPos() const;
 	const VECTOR& GetRightHandPos() const;
+	const ColliderData& GetColliderData() const override;
 	const VECTOR& GetAngles() const;
 
 private:
+
+	// コライダデータ(登録用)
+	ColliderData collider_;
 
 	// アニメーション
 	std::unique_ptr<AnimationController> animationController_;
@@ -87,11 +92,11 @@ private:
 
 	// 入力制御用
 	// -1だったら未入力
-	int backInputFrame_ = -1; 
-	bool preBackPressed_ = false;
 	int moveForwardCount_;
+	int backInputFrame_ = -1;
+	bool preBackPressed_;
 	bool preForwardPressed_;
-	bool readyHighTime_ = false;
+	bool readyHighTime_;
 
 	// アニメーションを保持
 	int armAnimId_;

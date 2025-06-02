@@ -135,8 +135,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Src\Collider\Capsule.cpp" />
-    <ClCompile Include="Src\Collider\Collider.cpp" />
+    <ClCompile Include="Src\Collider\ColliderData.cpp" />
     <ClCompile Include="Src\Object\Unit\NormalEnemy.cpp" />
     <ClCompile Include="Src\Object\SkyDome.cpp" />
     <ClCompile Include="Src\Controller\AnimationController.cpp" />
@@ -164,10 +163,11 @@
     <ClCompile Include="Src\Object\Transform.cpp" />
     <ClCompile Include="Src\Scene\TitleScene.cpp" />
     <ClCompile Include="Src\Object\Weapon.cpp" />
+    <ClCompile Include="Src\Common\Vector3.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Src\Collider\Capsule.h" />
-    <ClInclude Include="Src\Collider\Collider.h" />
+    <ClInclude Include="Src\Collider\ColliderData.h" />
+    <ClInclude Include="Src\Collider\ColliderBase.h" />
     <ClInclude Include="Src\Object\Unit\NormalEnemy.h" />
     <ClInclude Include="Src\Object\SkyDome.h" />
     <ClInclude Include="Src\Controller\AnimationController.h" />
@@ -196,6 +196,7 @@
     <ClInclude Include="Src\Object\Transform.h" />
     <ClInclude Include="Src\Scene\TitleScene.h" />
     <ClInclude Include="Src\Object\Weapon.h" />
+    <ClInclude Include="Src\Common\Vector3.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Src\Shader\Lightning.hlsl">

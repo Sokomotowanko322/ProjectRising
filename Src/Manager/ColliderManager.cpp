@@ -1,30 +1,42 @@
 #include "ColliderManager.h"
+#include "../Collider/ColliderData.h"
+#include <iostream>
 
-void ColliderManager::AddCollider(const std::shared_ptr<ColliderBase>& collider)
+void ColliderManager::Register(ColliderType type, const ColliderData& data) 
 {
-    if (collider) 
-    {
-        colliders.push_back(collider);
-    }
+    colliderMap_[type].push_back(data);
 }
 
-void ColliderManager::Update()
-{
-    for (auto& collider : colliders) 
-    {
-        collider->Update();
-    }
+void ColliderManager::Clear() {
+    colliderMap_.clear();
 }
 
-void ColliderManager::Draw() const 
+const std::vector<ColliderData>& ColliderManager::GetColliders(ColliderType type) const
 {
-    for (const auto& collider : colliders) 
+    static const std::vector<ColliderData> empty;
+    auto it = colliderMap_.find(type);
+    if (it != colliderMap_.end())
     {
-        collider->Draw();
+        return it->second;
     }
+    return empty;
 }
 
-void ColliderManager::Clear()
+void ColliderManager::CheckAllCollisions(ColliderType typeA, ColliderType typeB) 
 {
-    colliders.clear();
+    const auto& collidersA = GetColliders(typeA);
+    const auto& collidersB = GetColliders(typeB);
+
+    for (const auto& colA : collidersA)
+    {
+        for (const auto& colB : collidersB) 
+        {
+            if (CollisionUtility::CheckCollision(colA, colB))
+            {
+                std::cout << "Collision detected between type " << static_cast<int>(typeA)
+                    << " and type " << static_cast<int>(typeB) << std::endl;
+                // 必要に応じてコールバック処理やイベント通知を追加
+            }
+        }
+    }
 }
