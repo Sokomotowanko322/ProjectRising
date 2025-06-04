@@ -1,56 +1,27 @@
 #pragma once
-
+#include "ColliderType.h"
 #include <DxLib.h>
-#include "../Common/Vector3.h"
 
-enum class ColliderShape 
+struct BoxCollider 
 {
-    Capsule,
-    Sphere,
-    AABB,
+    VECTOR center_;
+    VECTOR size_;
 };
 
-struct Capsule 
+struct CapsuleCollider 
 {
-    Vector3 basePos;  // カプセルの下端の中心位置
-    float radius;
-    float height;
-};
-
-struct Sphere 
-{
-    Vector3 center;
-    float radius;
-};
-
-struct AABB 
-{
-    Vector3 min;
-    Vector3 max;
+    VECTOR start_;
+    VECTOR end_;
+    float radius_;
 };
 
 struct ColliderData 
 {
-    ColliderShape shape;
-
-    union 
-    {
-        Capsule capsule;
-        Sphere sphere;
-        AABB aabb;
+    ColliderType type_;
+    union {
+        BoxCollider box_;
+        CapsuleCollider capsule_;
     };
 
-    ColliderData();
-    ~ColliderData();
+    int ownerID_;
 };
-
-namespace CollisionUtility
-{
-    float Clamp(float value, float min, float max);
-    float SegmentToSegmentDistance(
-        const Vector3& p1, const Vector3& q1,
-        const Vector3& p2, const Vector3& q2
-    );
-    bool CheckCapsuleCapsule(const Capsule& a, const Capsule& b);
-    bool CheckCollision(const ColliderData& a, const ColliderData& b);
-}

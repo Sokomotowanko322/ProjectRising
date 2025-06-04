@@ -4,7 +4,7 @@
 class AnimationController;
 class Weapon; 
 
-class Player : public ActorBase, public ColliderBase
+class Player : public ActorBase//, public ColliderBase
 {
 public:
 
@@ -61,7 +61,7 @@ public:
 	// Žæ“¾Œn
 	const VECTOR& GetPos() const;
 	const VECTOR& GetRightHandPos() const;
-	const ColliderData& GetColliderData() const override;
+	const ColliderData& GetColliderData() const ;
 	const VECTOR& GetAngles() const;
 
 private:

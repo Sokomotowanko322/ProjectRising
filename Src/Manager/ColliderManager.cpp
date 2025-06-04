@@ -1,41 +1,49 @@
 #include "ColliderManager.h"
-#include "../Collider/ColliderData.h"
-#include <iostream>
+#include "../Utility/CollisionUtility.h"
 
-void ColliderManager::Register(ColliderType type, const ColliderData& data) 
+void ColliderManager::RegisterStage(const BoxCollider& box)
 {
-    colliderMap_[type].push_back(data);
+    stageColliders_.push_back(box);
 }
 
-void ColliderManager::Clear() {
-    colliderMap_.clear();
+void ColliderManager::RegisterActor(ActorBase* actor, ColliderType type) 
+{
+    CapsuleCollider capsule = actor->GetCapsuleCollider();
+    actorColliders_.emplace_back(actor, capsule);
 }
 
-const std::vector<ColliderData>& ColliderManager::GetColliders(ColliderType type) const
-{
-    static const std::vector<ColliderData> empty;
-    auto it = colliderMap_.find(type);
-    if (it != colliderMap_.end())
-    {
-        return it->second;
+void ColliderManager::RegisterWeapon(Weapon* weapon) {
+    CapsuleCollider capsule = weapon->GetCapsuleCollider();
+    weaponColliders_.emplace_back(weapon, capsule);
+}
+
+void ColliderManager::Update() {
+    // Actorの位置更新
+    for (auto& [actor, capsule] : actorColliders_) {
+        capsule = actor->GetCapsuleCollider();
     }
-    return empty;
+    // Weaponの位置更新
+    for (auto& [weapon, capsule] : weaponColliders_) {
+        capsule = weapon->GetCapsuleCollider();
+    }
 }
 
-void ColliderManager::CheckAllCollisions(ColliderType typeA, ColliderType typeB) 
-{
-    const auto& collidersA = GetColliders(typeA);
-    const auto& collidersB = GetColliders(typeB);
-
-    for (const auto& colA : collidersA)
-    {
-        for (const auto& colB : collidersB) 
-        {
-            if (CollisionUtility::CheckCollision(colA, colB))
-            {
-                std::cout << "Collision detected between type " << static_cast<int>(typeA)
-                    << " and type " << static_cast<int>(typeB) << std::endl;
-                // 必要に応じてコールバック処理やイベント通知を追加
+void ColliderManager::CheckCollisions() {
+    // StageとActor（Player, Enemy）の衝突判定・反射
+    for (auto& [actor, capsule] : actorColliders_) {
+        for (const auto& stage : stageColliders_) {
+            if (CollisionUtility::CapsuleToBox(capsule, stage)) {
+                actor->OnBounce(stage); // 反射処理
+            }
+        }
+    }
+    // WeaponとEnemyの衝突判定・ダメージ・アニメーション
+    for (auto& [weapon, wCapsule] : weaponColliders_) {
+        for (auto& [actor, aCapsule] : actorColliders_) {
+            if (actor->GetType() == ColliderType::Enemy &&
+                CollisionUtility::CapsuleToCapsule(wCapsule, aCapsule)) {
+                actor->OnDamage(weapon->GetDamage());
+                actor->OnReactToAttack(weapon->GetAttackType());
             }
         }
     }

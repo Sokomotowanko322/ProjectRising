@@ -1,7 +1,7 @@
+#pragma once
+
 enum class ColliderType 
 {
-    Player,
-    Weapon,
-    Enemy,
-    Stage
+    Box,
+    Capsule,
 };

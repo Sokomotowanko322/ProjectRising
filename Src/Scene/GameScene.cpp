@@ -1,5 +1,6 @@
 #include "../Manager/Camera.h"
 #include "../Manager/InputManager.h"
+#include "../Manager/ColliderManager.h"
 #include "../Manager/SceneManager.h"
 #include "../Common/Fader.h"
 #include "../Object/SkyDome.h"
@@ -18,6 +19,7 @@ GameScene::~GameScene(void)
 
 void GameScene::Init(void)
 {
+	
 	// プレイヤーの初期化
 	player_ = std::make_shared<Player>();
 	player_->Init();
@@ -26,6 +28,9 @@ void GameScene::Init(void)
 	normalEnemy_ = std::make_shared<NormalEnemy>(player_);
 	normalEnemy_->Init();
 
+	// コライダ初期化
+	InitCollider();
+
 	// スカイドーム
 	skyDome_ = std::make_unique<SkyDome>(player_->GetTransform());
 	skyDome_->Init();
@@ -33,6 +38,19 @@ void GameScene::Init(void)
 	// カメラの初期化
 	mainCamera.SetFollow(&player_->GetTransform());
 	mainCamera.ChangeMode(Camera::MODE::FOLLOW);
+}
+
+void GameScene::InitCollider(void)
+{
+	colMng_ = std::make_unique<ColliderManager>();
+
+	ColliderData data;
+	data.shape = ColliderShape::Capsule;
+	data.capsule.playerPos = player_->GetPos();
+	data.capsule.height = 80.0f;
+	data.capsule.radius = 20.0f;
+
+	colMng_->RegisterInstance(ObjectType::Player, VGet(10.0f, 0.0f, 0.0f));
 }
 
 void GameScene::Update(void)
@@ -50,6 +68,15 @@ void GameScene::Update(void)
 
 	// 敵の更新
 	normalEnemy_->Update();
+
+	// GameScene::Update()
+	ColliderData data;
+	data.shape = ColliderShape::Capsule;
+	data.capsule.playerPos = player_->GetPos();
+	data.capsule.height = 80.0f;
+	data.capsule.radius = 20.0f;
+
+	colMng_->Update(ObjectType::Player, 0, data); // プレイヤー1体だけならindex=0で固定
 }
 
 void GameScene::Draw(void)

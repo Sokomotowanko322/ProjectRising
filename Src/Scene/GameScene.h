@@ -1,6 +1,7 @@
 #include <memory>
 #include "SceneBase.h"
 
+class ColliderManager;
 class SkyDome;
 class Player;
 class NormalEnemy;
@@ -17,6 +18,7 @@ public:
 
 	// 初期化
 	void Init(void) override;
+	void InitCollider(void);
 
 	// 更新
 	void Update(void) override;
@@ -42,7 +44,7 @@ private:
 	//// ステージ
 	//std::shared_ptr<Stage> stage_;
 	// 衝突判定
-	//std::unique_ptr<Collision> collision_;
+	std::unique_ptr<ColliderManager> colMng_;
 
 };
 

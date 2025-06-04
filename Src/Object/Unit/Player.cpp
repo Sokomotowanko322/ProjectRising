@@ -61,7 +61,7 @@ rotRad_(0.0f)
 {
    // Colliderî•ñ‰Šú‰»
    collider_.shape = ColliderShape::Capsule;
-   collider_.capsule.basePos = transform_.pos;
+   collider_.capsule.playerPos = transform_.pos;
    collider_.capsule.radius = 0.5f;
    collider_.capsule.height = 1.8f;
 }

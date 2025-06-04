@@ -135,7 +135,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Src\Collider\ColliderData.cpp" />
+    <ClCompile Include="Src\Utility\CollisionUtility.cpp" />
     <ClCompile Include="Src\Object\Unit\NormalEnemy.cpp" />
     <ClCompile Include="Src\Object\SkyDome.cpp" />
     <ClCompile Include="Src\Controller\AnimationController.cpp" />
@@ -166,13 +166,13 @@
     <ClCompile Include="Src\Common\Vector3.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Src\Utility\CollisionUtility.h" />
     <ClInclude Include="Src\Collider\ColliderData.h" />
-    <ClInclude Include="Src\Collider\ColliderBase.h" />
+    <ClInclude Include="Src\Collider\ColliderType.h" />
     <ClInclude Include="Src\Object\Unit\NormalEnemy.h" />
     <ClInclude Include="Src\Object\SkyDome.h" />
     <ClInclude Include="Src\Controller\AnimationController.h" />
     <ClInclude Include="Src\Scene\GameScene.h" />
-    <ClInclude Include="Src\Collider\ColliderType.h" />
     <ClInclude Include="Src\Controller\ColliderController.h" />
     <ClInclude Include="Src\Scene\SceneBase.h" />
     <ClInclude Include="Src\Manager\Resource.h" />

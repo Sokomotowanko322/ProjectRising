@@ -1,19 +1,23 @@
 #pragma once
-#include <unordered_map>
 #include <vector>
 #include <memory>
-#include "../Collider/ColliderData.h"
 #include "../Collider/ColliderType.h"
+#include "../Collider/ColliderData.h"
+#include "../Object/Unit/ActorBase.h"
+#include "../Object/Weapon.h"
 
 class ColliderManager 
 {
 public:
+    void RegisterStage(const BoxCollider& box);
+    void RegisterActor(ActorBase* actor, ColliderType type); // Player, Enemy
+    void RegisterWeapon(Weapon* weapon);
 
-    void Register(ColliderType type, const ColliderData& data);
-    void Clear();
-    const std::vector<ColliderData>& GetColliders(ColliderType type) const;
-    void CheckAllCollisions(ColliderType typeA, ColliderType typeB);
+    void Update(); // 各コライダの位置を更新
+    void CheckCollisions();
 
 private:
-    std::unordered_map<ColliderType, std::vector<ColliderData>> colliderMap_;
+    std::vector<BoxCollider> stageColliders_;
+    std::vector<std::pair<ActorBase*, CapsuleCollider>> actorColliders_; // Player, Enemy
+    std::vector<std::pair<Weapon*, CapsuleCollider>> weaponColliders_;
 };
