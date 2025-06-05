@@ -19,7 +19,7 @@ public:
    
 	// æ“¾Œn
     const Transform& GetTransform(void) const;
-    VECTOR GetPosition() const;
+    virtual VECTOR GetPos() const = 0; // ƒˆ‰¼‘zŠÖ”
     int GetHP() const;
 
 	// İ’èŒn

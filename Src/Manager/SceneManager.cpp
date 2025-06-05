@@ -51,10 +51,6 @@ void SceneManager::Init(void)
 
 	isSceneChanging_ = false;
 
-	// コライダの生成
-	/*colMng_ = std::make_unique<ColliderManager>();
-	collision_ = std::make_unique<Collision>();*/
-
 	// デルタタイム
 	preTime_ = std::chrono::system_clock::now();
 

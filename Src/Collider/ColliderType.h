@@ -2,6 +2,6 @@
 
 enum class ColliderType 
 {
-    Box,
+    StageTransform,
     Capsule,
 };

@@ -1,5 +1,4 @@
 #include "ActorBase.h"
-#include "../../Collider/ColliderBase.h"
 
 class AnimationController;
 class Weapon; 
@@ -59,15 +58,11 @@ public:
 	void SetPos(const VECTOR& pos);
 
 	// 取得系
-	const VECTOR& GetPos() const;
+	VECTOR& GetPos() const override;
 	const VECTOR& GetRightHandPos() const;
-	const ColliderData& GetColliderData() const ;
 	const VECTOR& GetAngles() const;
 
 private:
-
-	// コライダデータ(登録用)
-	ColliderData collider_;
 
 	// アニメーション
 	std::unique_ptr<AnimationController> animationController_;

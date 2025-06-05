@@ -59,11 +59,7 @@ rightHandFrame_(-1),
 rightHandPos_(Utility::VECTOR_ZERO),
 rotRad_(0.0f)
 {
-   // Colliderî•ñ‰Šú‰»
-   collider_.shape = ColliderShape::Capsule;
-   collider_.capsule.playerPos = transform_.pos;
-   collider_.capsule.radius = 0.5f;
-   collider_.capsule.height = 1.8f;
+  
 }
 
 Player::~Player()
@@ -330,11 +326,6 @@ const VECTOR& Player::GetPos() const
 const VECTOR& Player::GetRightHandPos() const
 {
 	return rightHandPos_;
-}
-
-const ColliderData& Player::GetColliderData() const
-{
-	return collider_;
 }
 
 void Player::InitAnimation(void)

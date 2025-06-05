@@ -21,11 +21,6 @@ ActorBase::~ActorBase()
     }
 }
 
-VECTOR ActorBase::GetPosition() const 
-{
-    return position_;
-}
-
 int ActorBase::GetHP() const 
 {
     return hp_;

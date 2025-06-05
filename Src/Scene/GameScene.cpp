@@ -2,6 +2,7 @@
 #include "../Manager/InputManager.h"
 #include "../Manager/ColliderManager.h"
 #include "../Manager/SceneManager.h"
+#include "../Utility/Utility.h"
 #include "../Common/Fader.h"
 #include "../Object/SkyDome.h"
 #include "../Object/Unit/Player.h"
@@ -19,7 +20,6 @@ GameScene::~GameScene(void)
 
 void GameScene::Init(void)
 {
-	
 	// プレイヤーの初期化
 	player_ = std::make_shared<Player>();
 	player_->Init();
@@ -27,6 +27,11 @@ void GameScene::Init(void)
 	// 敵の初期化
 	normalEnemy_ = std::make_shared<NormalEnemy>(player_);
 	normalEnemy_->Init();
+
+	// コライダ生成
+	colMng_ = std::make_unique<ColliderManager>();
+	colMng_->RegisterActor(player_);
+	colMng_->RegisterActor(normalEnemy_);
 
 	// コライダ初期化
 	InitCollider();
@@ -42,15 +47,24 @@ void GameScene::Init(void)
 
 void GameScene::InitCollider(void)
 {
-	colMng_ = std::make_unique<ColliderManager>();
-
-	ColliderData data;
-	data.shape = ColliderShape::Capsule;
-	data.capsule.playerPos = player_->GetPos();
-	data.capsule.height = 80.0f;
-	data.capsule.radius = 20.0f;
-
-	colMng_->RegisterInstance(ObjectType::Player, VGet(10.0f, 0.0f, 0.0f));
+	colMng_->AddCollider(ColliderData(
+		ColliderType::Capsule,
+		player_->GetPos(),
+		Utility::VECTOR_ZERO,
+		1.0f,
+		2.0f,
+		player_->GetTransform().modelId,
+		true // トリガー
+	));
+	colMng_->AddCollider(ColliderData(
+		ColliderType::Capsule,
+		normalEnemy_->GetPos(),
+		Utility::VECTOR_ZERO,
+		1.0f,
+		2.0f,
+		normalEnemy_->GetTransform().modelId,
+		true // トリガー
+	));
 }
 
 void GameScene::Update(void)
@@ -69,14 +83,8 @@ void GameScene::Update(void)
 	// 敵の更新
 	normalEnemy_->Update();
 
-	// GameScene::Update()
-	ColliderData data;
-	data.shape = ColliderShape::Capsule;
-	data.capsule.playerPos = player_->GetPos();
-	data.capsule.height = 80.0f;
-	data.capsule.radius = 20.0f;
-
-	colMng_->Update(ObjectType::Player, 0, data); // プレイヤー1体だけならindex=0で固定
+	colMng_->Update();
+	
 }
 
 void GameScene::Draw(void)

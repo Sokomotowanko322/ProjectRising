@@ -12,7 +12,7 @@ class SceneBase;
 class Fader;
 class Camera;
 //class Collision;
-//class ColliderManager;
+class ColliderManager;
 
 class SceneManager
 {
@@ -105,12 +105,6 @@ private:
 
 	// 各種シーン用
 	std::unique_ptr<Weapon> weapon_;
-
-	// 衝突判定の登録
-	//std::unique_ptr<ColliderManager> colMng_;
-
-	//衝突判定を行うクラス
-	//std::unique_ptr<Collision> collision_;
 
 	// フェード
 	std::unique_ptr<Fader> fader_;
