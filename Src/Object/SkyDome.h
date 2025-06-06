@@ -29,6 +29,8 @@ public:
 	void Init(void);
 	void Update(void) override;
 	void Draw(void) override;
+	void SetPos(const VECTOR& pos)override;
+	VECTOR GetPos(void)const override;
 
 private:
 

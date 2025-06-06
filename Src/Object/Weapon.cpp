@@ -122,13 +122,17 @@ void Weapon::Draw(void)
 { 
 	// ƒ‚ƒfƒ‹•`‰æ
 	MV1DrawModel(weaponTransform_.modelId);
-}  
+}
+
+void Weapon::SetPos(const VECTOR& pos)
+{
+}
 
 void Weapon::DrawDebug(void)
 {  
 }
 
-const VECTOR Weapon::GetPos(void) const
+VECTOR Weapon::GetPos(void) const
 {
 	return weaponTransform_.pos;
 }

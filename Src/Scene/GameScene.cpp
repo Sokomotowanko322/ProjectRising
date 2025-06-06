@@ -50,20 +50,29 @@ void GameScene::InitCollider(void)
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
 		player_->GetPos(),
-		Utility::VECTOR_ZERO,
-		1.0f,
-		2.0f,
+		{ 0.0f,5.0f,0.0f },
+		20.0f,
+		5.0f,
 		player_->GetTransform().modelId,
-		true // トリガー
+		false // トリガー
 	));
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
 		normalEnemy_->GetPos(),
-		Utility::VECTOR_ZERO,
-		1.0f,
-		2.0f,
+		{0.0f,5.0f,0.0f},
+		20.0f,
+		5.0f,
 		normalEnemy_->GetTransform().modelId,
-		true // トリガー
+		false // トリガー
+	));
+	colMng_->AddCollider(ColliderData(
+		ColliderType::Capsule,
+		player_->GetWeapon()->GetPos(),
+		{ 0.0f,5.0f,0.0f },
+		20.0f,
+		5.0f,
+		player_->GetWeapon()->GetTransform().modelId,
+		false // トリガー
 	));
 }
 
@@ -97,6 +106,9 @@ void GameScene::Draw(void)
 
 	// 敵描画
 	normalEnemy_->Draw();
+
+	// コライダーの描画
+	colMng_->DrawColliders();
 
 	// テスト用で左上に緑の四角を描画
 	DrawBox(0, 0, 500, 50, GetColor(0, 255, 0), TRUE);

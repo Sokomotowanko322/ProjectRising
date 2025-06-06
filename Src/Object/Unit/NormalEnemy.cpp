@@ -89,6 +89,16 @@ void NormalEnemy::ChangeState(STATE state)
 	animationController_->ChangeAnimation(animationKey_);
 }
 
+VECTOR NormalEnemy::GetPos() const
+{
+	return transform_.pos;
+}
+
+void NormalEnemy::SetPos(const VECTOR& pos)
+{
+	transform_.pos = pos;
+}
+
 void NormalEnemy::InitAnimation(void)
 {
 	std::string path = Application::PATH_MODEL + PATH_NORMALENEMY;

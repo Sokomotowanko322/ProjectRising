@@ -33,7 +33,7 @@ public:
 
 	// 描画
 	void Draw(void);
-	void SetPos(VECTOR pos);
+	void SetPos(const VECTOR& pos)override;
 	
 	// デバッグ表示
 	void DrawDebug(void);
@@ -41,7 +41,7 @@ public:
 	const int GetIsEffect(void) const;
 
 	const VECTOR GetTopPos(void) const;
-	const VECTOR GetPos(void) const;
+	VECTOR GetPos(void) const;
 
 	void SetEffect(int effect);
 

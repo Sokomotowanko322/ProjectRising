@@ -61,6 +61,15 @@ void SkyDome::Draw(void)
 	MV1DrawModel(transform_.modelId);
 }
 
+void SkyDome::SetPos(const VECTOR& pos)
+{
+}
+
+VECTOR SkyDome::GetPos(void) const
+{
+	return VECTOR();
+}
+
 void SkyDome::ChangeState(STATE state)
 {
 

@@ -20,6 +20,7 @@ public:
 	// æ“¾Œn
     const Transform& GetTransform(void) const;
     virtual VECTOR GetPos() const = 0; // ƒˆ‰¼‘zŠÖ”
+    virtual void SetPos(const VECTOR& pos) = 0; // ƒˆ‰¼‘zŠÖ”
     int GetHP() const;
 
 	// İ’èŒn

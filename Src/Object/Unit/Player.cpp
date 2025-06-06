@@ -318,7 +318,7 @@ void Player::MoveControl(void)
 	}
 }
 
-const VECTOR& Player::GetPos() const
+VECTOR Player::GetPos() const
 {
 	return transform_.pos;
 }
@@ -326,6 +326,16 @@ const VECTOR& Player::GetPos() const
 const VECTOR& Player::GetRightHandPos() const
 {
 	return rightHandPos_;
+}
+
+std::shared_ptr<Weapon> Player::GetWeapon() const
+{
+	return weapon_;
+}
+
+void Player::SetPos(const VECTOR& pos)
+{
+	transform_.pos = pos;
 }
 
 void Player::InitAnimation(void)

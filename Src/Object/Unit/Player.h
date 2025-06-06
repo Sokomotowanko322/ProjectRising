@@ -55,12 +55,15 @@ public:
 	// ëÄçÏ
 	void ProcessInput(void);
 	void MoveControl(void);
-	void SetPos(const VECTOR& pos);
 
 	// éÊìæån
-	VECTOR& GetPos() const override;
+	VECTOR GetPos() const override;
 	const VECTOR& GetRightHandPos() const;
+	std::shared_ptr<Weapon> GetWeapon() const;
 	const VECTOR& GetAngles() const;
+
+	void SetPos(const VECTOR& pos)override;
+
 
 private:
 

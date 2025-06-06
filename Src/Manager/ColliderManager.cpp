@@ -1,10 +1,45 @@
 #include <DxLib.h>
-#include "../Object/Unit/ActorBase.h"
+#include "../Utility/CollisionUtility.h"
 #include "ColliderManager.h"
 
 void ColliderManager::RegisterActor(const std::shared_ptr<ActorBase>& actor)
 {
     actors_.push_back(actor);
+}
+
+void ColliderManager::DrawColliders()
+{
+    int idx = 0;
+    for (const auto& col : colliders_)
+    {
+        printfDx("Collider[%d]: type=%d, ownerID=%d, pos=(%.2f, %.2f, %.2f)\n",
+            idx, (int)col.type_, col.ownerID_, col.pos_.x, col.pos_.y, col.pos_.z);
+        ++idx;
+
+        if (col.type_ == ColliderType::Capsule)
+        {
+            // カプセルの中心col.pos_、方向col.dir_、高さcol.height_、半径col.radius_の場合
+            VECTOR start = VAdd(col.pos_, VScale(col.dir_, -col.height_ * 0.5f));
+            VECTOR end = VAdd(col.pos_, VScale(col.dir_, col.height_ * 0.5f));
+            DrawCapsule3D(
+                start,
+                end,
+                col.radius_,
+                16,                        // 分割数
+                GetColor(255, 0, 0),         // 側面の色
+                GetColor(255, 0, 0),         // 両端の色
+                FALSE                      // ワイヤーフレーム
+            );
+        }
+        //else if (col.type_ == ColliderType::StageTransform)
+        //{
+        //    // ボックス（AABB）描画例
+        //    VECTOR min = VSub(col.pos_, VScale(col.dir_, 0.5f));
+        //    VECTOR max = VAdd(col.pos_, VScale(col.dir_, 0.5f));
+        //    DrawBox(max.x, max.y, max.z,GetColor(0, 255, 0),true,1);
+        //}
+        //// 必要に応じて他のタイプも追加
+    }
 }
 
 void ColliderManager::AddCollider(const ColliderData& collider)
@@ -14,34 +49,47 @@ void ColliderManager::AddCollider(const ColliderData& collider)
 
 void ColliderManager::Update() 
 {
-    // アクターごとにコライダー情報を更新
-    for (auto i = actors_.begin(); i != actors_.end(); ) 
+    for (auto i = actors_.begin(); i != actors_.end(); )
     {
-        if (auto actor = i->lock()) 
+        if (auto actor = i->lock())
         {
-            // ここでactorの情報を使ってcolliders_を更新
-            // 例: col.pos_ = actor->GetPos();
             UpdateColliders();
             CheckCollisions();
+
+            // --- ここでコライダーの位置をアクター本体に反映 ---
+            for (auto& col : colliders_)
+            {
+                if (col.type_ == ColliderType::Capsule && col.ownerID_ == actor->GetTransform().modelId)
+                {
+                    actor->SetPos(col.pos_);
+                }
+            }
+            // ---------------------------------------------------
+
             ++i;
         }
-        else 
+        else
         {
-            // 解放済みアクターはリストから削除
             i = actors_.erase(i);
         }
     }
-
-  
 }
 
 void ColliderManager::UpdateColliders()
 {
-    for (auto& col : colliders_) 
+    // actors_の各アクターに対してコライダーを更新
+    for (auto& weakActor : actors_)
     {
-        if (col.type_ == ColliderType::Capsule) 
+        if (auto actor = weakActor.lock())
         {
-            col.pos_ = allActor_.lock()->GetPos();
+            // ここでactorの位置を使ってコライダーを更新
+            for (auto& col : colliders_)
+            {
+                if (col.type_ == ColliderType::Capsule && col.ownerID_ == actor->GetTransform().modelId)
+                {
+                    col.pos_ = actor->GetPos();
+                }
+            }
         }
     }
 }
@@ -49,23 +97,28 @@ void ColliderManager::UpdateColliders()
 void ColliderManager::CheckCollisions() {
     for (size_t i = 0; i < colliders_.size(); ++i) {
         for (size_t j = i + 1; j < colliders_.size(); ++j) {
-            const ColliderData& a = colliders_[i];
-            const ColliderData& b = colliders_[j];
+            ColliderData& a = colliders_[i];
+            ColliderData& b = colliders_[j];
 
-            // Stage判定
+            if (a.type_ == ColliderType::Capsule && b.type_ == ColliderType::Capsule) 
+            {
+                if (!a.isTrigger_ && !b.isTrigger_)
+                {
+                    ResolveCapsuleCollision(a, b); // 追加：自機と敵など
+                }
+                else if (a.isTrigger_ && !b.isTrigger_) {
+                    HandleWeaponHit(a, b);
+                }
+                else if (!a.isTrigger_ && b.isTrigger_) {
+                    HandleWeaponHit(b, a);
+                }
+            }
+
             if (a.type_ == ColliderType::Capsule && b.type_ == ColliderType::StageTransform) {
-                ResolveStageCollision(colliders_[i], b);
+                ResolveStageCollision(a, b);
             }
             else if (b.type_ == ColliderType::Capsule && a.type_ == ColliderType::StageTransform) {
-                ResolveStageCollision(colliders_[j], a);
-            }
-
-            // Weaponヒット
-            if (a.isTrigger_ && !b.isTrigger_) {
-                HandleWeaponHit(a, b);
-            }
-            else if (!a.isTrigger_ && b.isTrigger_) {
-                HandleWeaponHit(b, a);
+                ResolveStageCollision(b, a);
             }
         }
     }
@@ -102,6 +155,31 @@ void ColliderManager::ResolveStageCollision(ColliderData& mover, const ColliderD
     float penetration = mover.radius_ - len;
     if (penetration > 0.0f) {
         mover.pos_ = VAdd(mover.pos_, VScale(normal, penetration + 0.01f));
+    }
+}
+
+void ColliderManager::ResolveCapsuleCollision(ColliderData& a, ColliderData& b)
+{
+    // 2つのカプセルの中心座標の差分ベクトル（法線）
+    VECTOR dir = VSub(a.pos_, b.pos_);
+    float dist = VSize(dir);
+
+    // 半径の合計
+    float rSum = a.radius_ + b.radius_;
+
+    // めり込み量を計算
+    float penetration = rSum - dist;
+
+    if (penetration > 0.0f && dist > 1e-4f) {
+        // 法線を正規化
+        VECTOR normal = VNorm(dir);
+
+        // 少しだけ余裕を持たせて押し出す
+        float pushBack = penetration + 0.05f;
+
+        // 両者を均等に押し出す
+        a.pos_ = VAdd(a.pos_, VScale(normal, pushBack * 20.0f));
+        b.pos_ = VAdd(b.pos_, VScale(normal, -pushBack * 20.0f));
     }
 }
 

@@ -52,6 +52,10 @@ public:
 	// ó‘Ô‘JˆÚ
 	void ChangeState(STATE state);
 
+	// ˆÊ’u‚Ìæ“¾
+	VECTOR GetPos() const override;
+	void SetPos(const VECTOR& pos)override;
+
 protected:
 
 
