@@ -88,7 +88,8 @@ public:
 	// ƒJƒƒ‰‚Ìæ“¾
 	Camera& GetCamera(void);
 
-	Weapon* GetWeapon() {
+	Weapon* GetWeapon() 
+	{
 		return weapon_.get();
 	};
 

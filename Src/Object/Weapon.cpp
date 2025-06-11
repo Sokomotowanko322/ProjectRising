@@ -128,6 +128,11 @@ void Weapon::SetPos(const VECTOR& pos)
 {
 }
 
+const Transform& Weapon::GetWeaponTransform(void) const
+{
+	return weaponTransform_;
+}
+
 void Weapon::DrawDebug(void)
 {  
 }

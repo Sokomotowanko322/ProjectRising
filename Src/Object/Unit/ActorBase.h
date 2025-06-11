@@ -24,7 +24,7 @@ public:
     int GetHP() const;
 
 	// İ’èŒn
-    void SetHP(int hp);
+    int SetHP(int hp);
     bool IsAlive() const;
 
 

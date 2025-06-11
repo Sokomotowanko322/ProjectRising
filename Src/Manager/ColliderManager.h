@@ -29,5 +29,5 @@ private:
     void CheckCollisions();
     void ResolveStageCollision(ColliderData& mover, const ColliderData& stage);
     void ResolveCapsuleCollision(ColliderData& a, ColliderData& b);
-    void HandleWeaponHit(const ColliderData& weapon, const ColliderData& target);
+    void HitAttackToDamage(const ColliderData& self, const ColliderData& target);
 };

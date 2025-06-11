@@ -31,12 +31,12 @@ const Transform& ActorBase::GetTransform(void) const
     return transform_;
 }
 
-void ActorBase::SetHP(int newHP) 
+int ActorBase::SetHP(int hp)
 {
-    hp_ = newHP;
+    return hp_ = hp;
 }
 
-bool ActorBase::IsAlive() const 
+bool ActorBase::IsAlive() const
 {
     return hp_ <= 0;
 }

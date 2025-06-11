@@ -35,6 +35,9 @@ public:
 	void Draw(void);
 	void SetPos(const VECTOR& pos)override;
 	
+	// 武器のTransformを取得
+	const Transform& GetWeaponTransform(void) const;
+
 	// デバッグ表示
 	void DrawDebug(void);
 

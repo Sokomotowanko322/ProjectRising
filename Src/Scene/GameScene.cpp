@@ -10,6 +10,9 @@
 #include "../Object/Weapon.h"
 #include "GameScene.h"
 
+const VECTOR PLAYER_WEAPON_TOP = { 0.0f, 180.0f, 0.0f };
+const VECTOR PLAYER_WEAPON_BOTTOM = { 0.0f, 0.0f, 0.0f };
+
 GameScene::GameScene(void)
 {
 }
@@ -32,9 +35,13 @@ void GameScene::Init(void)
 	colMng_ = std::make_unique<ColliderManager>();
 	colMng_->RegisterActor(player_);
 	colMng_->RegisterActor(normalEnemy_);
+	colMng_->RegisterActor(player_->GetWeapon());
+
+	// --- ここで一度WeaponのmodelIdを確認 ---
+	printfDx("Weapon modelId after Init: %d\n", player_->GetWeapon()->GetTransform().modelId);
 
 	// コライダ初期化
-	InitCollider();
+	AddColliders();
 
 	// スカイドーム
 	skyDome_ = std::make_unique<SkyDome>(player_->GetTransform());
@@ -45,7 +52,7 @@ void GameScene::Init(void)
 	mainCamera.ChangeMode(Camera::MODE::FOLLOW);
 }
 
-void GameScene::InitCollider(void)
+void GameScene::AddColliders(void)
 {
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
@@ -58,6 +65,15 @@ void GameScene::InitCollider(void)
 	));
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
+		player_->GetPos(),
+		{ 0.5f,0.5f,0.5f } ,
+		1.0f,
+		10.0f,
+		player_->GetTransform().modelId,
+		true // トリガー
+	));
+	colMng_->AddCollider(ColliderData(
+		ColliderType::Capsule,
 		normalEnemy_->GetPos(),
 		{0.0f,5.0f,0.0f},
 		20.0f,
@@ -65,14 +81,33 @@ void GameScene::InitCollider(void)
 		normalEnemy_->GetTransform().modelId,
 		false // トリガー
 	));
+
+
+	// 武器のTransform取得
+	const Transform& weaponTrans = player_->GetWeapon()->GetWeaponTransform();
+	Quaternion rot = weaponTrans.quaRot;
+	VECTOR scl = weaponTrans.scl;
+	VECTOR pos = weaponTrans.pos;
+
+	// ローカル→ワールド変換
+	VECTOR tipWorld = VAdd(pos, Quaternion::PosAxis(rot, { PLAYER_WEAPON_TOP.x * scl.x, PLAYER_WEAPON_TOP.y * scl.y, PLAYER_WEAPON_TOP.z * scl.z }));
+	tipWorld.y += 100.0f; // 武器の先端を上に100単位移動
+	VECTOR baseWorld = VAdd(pos, Quaternion::PosAxis(rot, { PLAYER_WEAPON_BOTTOM.x * scl.x, PLAYER_WEAPON_BOTTOM.y * scl.y, PLAYER_WEAPON_BOTTOM.z * scl.z }));
+
+	// カプセル中心・向き・長さ
+	VECTOR center = VScale(VAdd(tipWorld, baseWorld), 0.5f);
+	VECTOR dir = VNorm(VSub(tipWorld, baseWorld));
+	float height = VSize(VSub(tipWorld, baseWorld));
+
+	// コライダ追加
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
-		player_->GetWeapon()->GetPos(),
-		{ 0.0f,5.0f,0.0f },
-		20.0f,
-		5.0f,
-		player_->GetWeapon()->GetTransform().modelId,
-		false // トリガー
+		center,
+		dir,
+		height,
+		2.0f, // 半径は適宜
+		weaponTrans.modelId,
+		true // トリガー
 	));
 }
 

@@ -1,5 +1,6 @@
 #include <DxLib.h>
 #include "../Utility/CollisionUtility.h"
+#include "../Object/Weapon.h"
 #include "ColliderManager.h"
 
 void ColliderManager::RegisterActor(const std::shared_ptr<ActorBase>& actor)
@@ -19,8 +20,8 @@ void ColliderManager::DrawColliders()
         if (col.type_ == ColliderType::Capsule)
         {
             // カプセルの中心col.pos_、方向col.dir_、高さcol.height_、半径col.radius_の場合
-            VECTOR start = VAdd(col.pos_, VScale(col.dir_, -col.height_ * 0.5f));
-            VECTOR end = VAdd(col.pos_, VScale(col.dir_, col.height_ * 0.5f));
+            VECTOR start = VAdd(col.pos_, VScale(col.dir_, -col.length_ * 0.5f));
+            VECTOR end = VAdd(col.pos_, VScale(col.dir_, col.length_ * 0.5f));
             DrawCapsule3D(
                 start,
                 end,
@@ -77,19 +78,43 @@ void ColliderManager::Update()
 
 void ColliderManager::UpdateColliders()
 {
-    // actors_の各アクターに対してコライダーを更新
     for (auto& weakActor : actors_)
     {
-        if (auto actor = weakActor.lock())
-        {
-            // ここでactorの位置を使ってコライダーを更新
-            for (auto& col : colliders_)
-            {
-                if (col.type_ == ColliderType::Capsule && col.ownerID_ == actor->GetTransform().modelId)
-                {
-                    col.pos_ = actor->GetPos();
+        auto actor = weakActor.lock();
+        if (!actor) continue;
+
+        // Weapon型と処理を分けていく
+        if (auto weapon = dynamic_cast<Weapon*>(actor.get())) {
+            const Transform& trans = weapon->GetWeaponTransform();
+            VECTOR scl = trans.scl;
+            VECTOR pos = trans.pos;
+            Quaternion rot = trans.quaRot;
+
+            VECTOR tipWorld = VAdd(pos, Quaternion::PosAxis(rot, { 1200.0f * scl.x, 0.0f * scl.y, 0.0f * scl.z }));
+            tipWorld.x += 30.0f; // 武器の先端を上に100単位移動
+            tipWorld.y += 16.0f; // 武器の先端を上に100単位移動
+
+            VECTOR baseWorld = VAdd(pos, Quaternion::PosAxis(rot, { 0.0f * scl.x, 0 * scl.y, 0.0f * scl.z }));
+
+            VECTOR center = VScale(VAdd(tipWorld, baseWorld), 0.5f);
+            VECTOR dir = VNorm(VSub(tipWorld, baseWorld));
+            float height = VSize(VSub(tipWorld, baseWorld));
+
+            for (auto& col : colliders_) {
+                if (col.ownerID_ == trans.modelId) {
+                    col.pos_ = center;
+                    col.dir_ = dir;
+                    col.length_ = height;
                 }
             }
+        }
+        // 通常アクター
+        int actorId = actor->GetTransform().modelId;
+        for (auto& col : colliders_)
+        {
+            if (col.type_ != ColliderType::Capsule) continue;
+            if (col.ownerID_ != actorId) continue;
+            col.pos_ = actor->GetPos();
         }
     }
 }
@@ -107,10 +132,10 @@ void ColliderManager::CheckCollisions() {
                     ResolveCapsuleCollision(a, b); // 追加：自機と敵など
                 }
                 else if (a.isTrigger_ && !b.isTrigger_) {
-                    HandleWeaponHit(a, b);
+                    
                 }
                 else if (!a.isTrigger_ && b.isTrigger_) {
-                    HandleWeaponHit(b, a);
+                    
                 }
             }
 
@@ -183,7 +208,27 @@ void ColliderManager::ResolveCapsuleCollision(ColliderData& a, ColliderData& b)
     }
 }
 
-void ColliderManager::HandleWeaponHit(const ColliderData& weapon, const ColliderData& target) 
+void ColliderManager::HitAttackToDamage(const ColliderData& self, const ColliderData& target) 
 {
-    
+    // ownerIDからアクターを特定
+    ActorBase* attacker = nullptr;
+    ActorBase* victim = nullptr;
+    for (auto& weakActor : actors_)
+    {
+        if (auto actor = weakActor.lock()) 
+        {
+            if (actor->GetTransform().modelId == self.ownerID_) 
+            {
+                attacker = actor.get();
+            }
+            if (actor->GetTransform().modelId == target.ownerID_) 
+            {
+                victim = actor.get();
+            }
+        }
+    }
+    if (!attacker || !victim) 
+    {
+        return;
+    }
 }

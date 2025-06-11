@@ -18,7 +18,9 @@ public:
 
 	// 初期化
 	void Init(void) override;
-	void InitCollider(void);
+
+	// コライダの追加
+	void AddColliders(void);
 
 	// 更新
 	void Update(void) override;
