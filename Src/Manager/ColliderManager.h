@@ -12,9 +12,15 @@ public:
 
     // アクターを登録
     void RegisterActor(const std::shared_ptr<ActorBase>& actor);
+
+    // デバッグ描画
     void DrawColliders();
+
+	// コライダーを追加
     void AddCollider(const ColliderData& collider);
-    void Update(); // 毎フレーム、位置を更新しつつ当たり判定処理
+    
+    // まとめて更新
+    void Update();
 
 private:
 
@@ -24,9 +30,13 @@ private:
 	// コライダーのリスト
     std::vector<ColliderData> colliders_;
    
-
-    void UpdateColliders(); // 移動体の位置更新（GetPos呼び出し）
+    // コライダの位置などを更新する
+    void UpdateColliders();
+	
+    // 当たり判定をチェック
     void CheckCollisions();
+    
+	// 衝突時処理類
     void ResolveStageCollision(ColliderData& mover, const ColliderData& stage);
     void ResolveCapsuleCollision(ColliderData& a, ColliderData& b);
     void HitAttackToDamage(const ColliderData& self, const ColliderData& target);

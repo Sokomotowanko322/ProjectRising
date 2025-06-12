@@ -1,5 +1,6 @@
 #include <DxLib.h>
 #include "../Utility/CollisionUtility.h"
+#include "../Object/Unit/Player.h"
 #include "../Object/Weapon.h"
 #include "ColliderManager.h"
 
@@ -60,13 +61,14 @@ void ColliderManager::Update()
             // --- ここでコライダーの位置をアクター本体に反映 ---
             for (auto& col : colliders_)
             {
-                if (col.type_ == ColliderType::Capsule && col.ownerID_ == actor->GetTransform().modelId)
+                // 右手コライダーは除外
+                if (col.type_ == ColliderType::Capsule &&
+                    col.ownerID_ == actor->GetTransform().modelId &&
+                    !col.isRightHand_)
                 {
                     actor->SetPos(col.pos_);
                 }
             }
-            // ---------------------------------------------------
-
             ++i;
         }
         else
@@ -83,38 +85,43 @@ void ColliderManager::UpdateColliders()
         auto actor = weakActor.lock();
         if (!actor) continue;
 
-        // Weapon型と処理を分けていく
-        if (auto weapon = dynamic_cast<Weapon*>(actor.get())) {
-            const Transform& trans = weapon->GetWeaponTransform();
-            VECTOR scl = trans.scl;
-            VECTOR pos = trans.pos;
-            Quaternion rot = trans.quaRot;
-
-            VECTOR tipWorld = VAdd(pos, Quaternion::PosAxis(rot, { 1200.0f * scl.x, 0.0f * scl.y, 0.0f * scl.z }));
-            tipWorld.x += 30.0f; // 武器の先端を上に100単位移動
-            tipWorld.y += 16.0f; // 武器の先端を上に100単位移動
-
-            VECTOR baseWorld = VAdd(pos, Quaternion::PosAxis(rot, { 0.0f * scl.x, 0 * scl.y, 0.0f * scl.z }));
-
-            VECTOR center = VScale(VAdd(tipWorld, baseWorld), 0.5f);
-            VECTOR dir = VNorm(VSub(tipWorld, baseWorld));
-            float height = VSize(VSub(tipWorld, baseWorld));
-
-            for (auto& col : colliders_) {
-                if (col.ownerID_ == trans.modelId) {
-                    col.pos_ = center;
-                    col.dir_ = dir;
-                    col.length_ = height;
-                }
-            }
-        }
-        // 通常アクター
         int actorId = actor->GetTransform().modelId;
+        Player* player = dynamic_cast<Player*>(actor.get());
+        Weapon* weapon = dynamic_cast<Weapon*>(actor.get());
+
         for (auto& col : colliders_)
         {
             if (col.type_ != ColliderType::Capsule) continue;
-            if (col.ownerID_ != actorId) continue;
-            col.pos_ = actor->GetPos();
+
+            if (weapon && col.ownerID_ == weapon->GetWeaponTransform().modelId) {
+                // デバッグ出力
+                printfDx("UpdateColliders: col.ownerID_=%d, weaponModelId=%d\n", col.ownerID_, weapon->GetWeaponTransform().modelId);
+
+                // 武器コライダの更新
+                const Transform& trans = weapon->GetWeaponTransform();
+                VECTOR scl = trans.scl;
+                VECTOR pos = trans.pos;
+                Quaternion rot = trans.quaRot;
+
+                VECTOR tipWorld = VAdd(pos, Quaternion::PosAxis(rot, { 1200.0f * scl.x, 0.0f, 0.0f }));
+                tipWorld.x += 30.0f;
+                tipWorld.y += 16.0f;
+                VECTOR baseWorld = VAdd(pos, Quaternion::PosAxis(rot, { 0.0f, 0.0f, 0.0f }));
+
+                VECTOR center = VScale(VAdd(tipWorld, baseWorld), 0.5f);
+                VECTOR dir = VNorm(VSub(tipWorld, baseWorld));
+                float height = VSize(VSub(tipWorld, baseWorld));
+
+                col.pos_ = center;
+                col.dir_ = dir;
+                col.length_ = height;
+            }
+            else if (player && col.isRightHand_ && col.ownerID_ == actorId) {
+                col.pos_ = player->GetRightHandPos();
+            }
+            else if (col.ownerID_ == actorId) {
+                col.pos_ = actor->GetPos();
+            }
         }
     }
 }

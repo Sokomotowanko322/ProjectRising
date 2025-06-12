@@ -40,12 +40,12 @@ void GameScene::Init(void)
 	// --- ここで一度WeaponのmodelIdを確認 ---
 	printfDx("Weapon modelId after Init: %d\n", player_->GetWeapon()->GetTransform().modelId);
 
-	// コライダ初期化
-	AddColliders();
-
 	// スカイドーム
 	skyDome_ = std::make_unique<SkyDome>(player_->GetTransform());
 	skyDome_->Init();
+
+	// ★ここでAddCollidersを呼ぶ（WeaponのmodelIdがセットされた後）
+	AddColliders();
 
 	// カメラの初期化
 	mainCamera.SetFollow(&player_->GetTransform());
@@ -65,12 +65,13 @@ void GameScene::AddColliders(void)
 	));
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
-		player_->GetPos(),
+		player_->GetRightHandPos(),
 		{ 0.5f,0.5f,0.5f } ,
 		1.0f,
 		10.0f,
 		player_->GetTransform().modelId,
-		true // トリガー
+		true,
+		true
 	));
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
@@ -84,10 +85,9 @@ void GameScene::AddColliders(void)
 
 
 	// 武器のTransform取得
-	const Transform& weaponTrans = player_->GetWeapon()->GetWeaponTransform();
-	Quaternion rot = weaponTrans.quaRot;
-	VECTOR scl = weaponTrans.scl;
-	VECTOR pos = weaponTrans.pos;
+	Quaternion rot = player_->GetWeapon()->GetWeaponTransform().quaRot;
+	VECTOR scl = player_->GetWeapon()->GetWeaponTransform().scl;
+	VECTOR pos = player_->GetWeapon()->GetWeaponTransform().pos;
 
 	// ローカル→ワールド変換
 	VECTOR tipWorld = VAdd(pos, Quaternion::PosAxis(rot, { PLAYER_WEAPON_TOP.x * scl.x, PLAYER_WEAPON_TOP.y * scl.y, PLAYER_WEAPON_TOP.z * scl.z }));
@@ -106,7 +106,7 @@ void GameScene::AddColliders(void)
 		dir,
 		height,
 		2.0f, // 半径は適宜
-		weaponTrans.modelId,
+		player_->GetWeapon()->GetWeaponTransform().modelId,
 		true // トリガー
 	));
 }

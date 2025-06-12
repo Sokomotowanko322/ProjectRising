@@ -11,4 +11,5 @@ struct ColliderData
     float radius_;    // 半径
     int ownerID_;     // 所属アクターID
     bool isTrigger_;  // トリガーかどうか
+    bool isRightHand_ = false; // 追加
 };
