@@ -20,9 +20,11 @@ const float ROTATION_MIN = 0.001f;
 // 回転の限界値
 const float DOT_MIN = 0.99f;
 
-// 
+// ステップ数分割
 const float DEVIDE_STEPCOUNT = 8.0f;
 
+// 遠距離判定用
+const float LONG_RANGE = 300.0f;
 
 NormalEnemy::NormalEnemy(std::weak_ptr<Player> player) : ActorBase(),
 animationController_(std::make_unique<AnimationController>(transform_.modelId)),
@@ -31,8 +33,9 @@ rotationStep_(0.0f)
 {
 	player_ = player;
 	stateChange_[STATE::IDLE] = std::bind(&NormalEnemy::ChangeIdle, this);
-	stateChange_[STATE::WALK] = std::bind(&NormalEnemy::ChangeWalk, this);
+	stateChange_[STATE::WALK] = std::bind(&NormalEnemy::ChangeClose, this);
 	stateChange_[STATE::ATTACK] = std::bind(&NormalEnemy::ChangeAttack, this);
+	stateChange_[STATE::DAMAGED] = std::bind(&NormalEnemy::ChangeDamaged, this);
 }
 
 NormalEnemy::~NormalEnemy()
@@ -66,12 +69,17 @@ void NormalEnemy::Update(void)
 
 	// モデルの更新
 	transform_.Update();
+
 }
 
 void NormalEnemy::Draw(void)
 {
 	// モデルの描画
 	MV1DrawModel(transform_.modelId);
+}
+
+void NormalEnemy::Damage(int damageAmount)
+{
 }
 
 void NormalEnemy::ChangeState(STATE state)
@@ -118,14 +126,19 @@ void NormalEnemy::ChangeIdle(void)
 	stateUpdate_ = std::bind(&NormalEnemy::UpdateIdle, this);
 }
 
-void NormalEnemy::ChangeWalk(void)
+void NormalEnemy::ChangeClose(void)
 {
-	stateUpdate_ = std::bind(&NormalEnemy::UpdateWalk, this);
+	stateUpdate_ = std::bind(&NormalEnemy::UpdateClose, this);
 }
 
 void NormalEnemy::ChangeAttack(void)
 {
 	stateUpdate_ = std::bind(&NormalEnemy::UpdateAttack, this);
+}
+
+void NormalEnemy::ChangeDamaged(void)
+{
+	stateUpdate_ = std::bind(&NormalEnemy::UpdateDamaged, this);
 }
 
 void NormalEnemy::UpdateIdle(void)
@@ -160,12 +173,53 @@ void NormalEnemy::UpdateIdle(void)
 	{
 		animationController_->ChangeAnimation("IDLE");
 	}
+
+	// プレイヤーの座標を取得
+	VECTOR pPos = player_.lock()->GetPos();
+
+	// エネミーからプレイヤーまでのベクトル
+	VECTOR diff = VSub(pPos, transform_.pos);
+
+	// XZ距離
+	float distance = diff.x * diff.x + diff.z * diff.z;
+
+	VECTOR vec;
+	vec = VSub(pPos, transform_.pos);
+	VECTOR direction = VNorm(vec);
+
+	float length = Utility::MagnitudeF(vec);
+
+	// プレイヤーに近ければ攻撃、離れていれば近づける
+	if (distance >= LONG_RANGE * LONG_RANGE)
+	{
+		ChangeClose();
+	}
+
 }
 
-void NormalEnemy::UpdateWalk(void)
+void NormalEnemy::UpdateClose(void)
 {
+
+	// プレイヤーの座標を取得
+	VECTOR pPos = player_.lock()->GetPos();
+
+	// エネミーからプレイヤーまでのベクトル
+	VECTOR diff = VSub(pPos, transform_.pos);
+
+	// XZ距離
+	float distance = diff.x * diff.x + diff.z * diff.z;
+
+	VECTOR vec;
+	vec = VSub(pPos, transform_.pos);
+	VECTOR direction = VNorm(vec);
+
+	float length = Utility::MagnitudeF(vec);
 }
 
 void NormalEnemy::UpdateAttack(void)
+{
+}
+
+void NormalEnemy::UpdateDamaged(void)
 {
 }

@@ -44,7 +44,7 @@ void GameScene::Init(void)
 	skyDome_ = std::make_unique<SkyDome>(player_->GetTransform());
 	skyDome_->Init();
 
-	// ★ここでAddCollidersを呼ぶ（WeaponのmodelIdがセットされた後）
+	// コライダのセット
 	AddColliders();
 
 	// カメラの初期化
@@ -61,7 +61,7 @@ void GameScene::AddColliders(void)
 		20.0f,
 		5.0f,
 		player_->GetTransform().modelId,
-		false // トリガー
+		false	// 貫通しない
 	));
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
@@ -70,8 +70,8 @@ void GameScene::AddColliders(void)
 		1.0f,
 		10.0f,
 		player_->GetTransform().modelId,
-		true,
-		true
+		true,	// 貫通する
+		true	// 右腕コライダか判定
 	));
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
@@ -80,7 +80,7 @@ void GameScene::AddColliders(void)
 		20.0f,
 		5.0f,
 		normalEnemy_->GetTransform().modelId,
-		false // トリガー
+		false	// 貫通しない
 	));
 
 

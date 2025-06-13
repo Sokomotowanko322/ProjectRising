@@ -57,14 +57,14 @@ public:
 	void MoveControl(void);
 
 	// 取得系
-	VECTOR GetPos() const override;
-	const VECTOR& GetRightHandPos() const;
 	std::shared_ptr<Weapon> GetWeapon() const;
-	const VECTOR& GetAngles() const;
+	ANIM_TYPE GetCurrentAnimType() const;
+	const VECTOR& GetRightHandPos() const;
+	VECTOR GetPos() const override;
 
+	// プレイヤーの位置をコライダと合わせる
 	void SetPos(const VECTOR& pos)override;
-
-
+	
 private:
 
 	// アニメーション
@@ -72,6 +72,9 @@ private:
 
 	// 武器(主にプレイヤー用として機能させる)
 	std::shared_ptr<Weapon> weapon_;
+
+	// アニメーションタイプ
+	ANIM_TYPE currentAnimType_;
 
 	// 右手の座標
 	VECTOR rightHandPos_;

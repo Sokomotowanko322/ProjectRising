@@ -14,7 +14,8 @@ public:
 		IDLE,
 		WALK,
 		//RUN,
-		ATTACK
+		ATTACK,
+		DAMAGED
 	};
 
 	// アニメーション種別
@@ -24,6 +25,7 @@ public:
 		WALK,
 		//RUN,
 		ATTACK,
+		DAMAGED,
 		ALL
 	};
 
@@ -34,6 +36,7 @@ public:
 		"WALK",
 		/*"RUN",*/
 		"ATTACK",
+		"DAMAGED",
 	};
 
 	// コンストラクタ
@@ -48,6 +51,9 @@ public:
 	
 	// 描画
 	void Draw(void) override;
+
+	// ダメージ
+	void Damage(int damageAmount) override;
 
 	// 状態遷移
 	void ChangeState(STATE state);
@@ -82,14 +88,16 @@ private:
 	// STATEの変更、関数内で同時にUPDATEとアニメーションを呼び出す
 	std::unordered_map<STATE, std::function<void(void)>> stateChange_;
 	void ChangeIdle(void);
-	void ChangeWalk(void);
+	void ChangeClose(void);
 	void ChangeAttack(void);
+	void ChangeDamaged(void);
 
 	// 更新
 	std::function<void(void)> stateUpdate_;
 	void UpdateIdle(void);
-	void UpdateWalk(void);
+	void UpdateClose(void);
 	void UpdateAttack(void);
+	void UpdateDamaged(void);
 
 	// 回転の差分
 	VECTOR diff_;

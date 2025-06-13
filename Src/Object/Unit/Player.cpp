@@ -157,6 +157,7 @@ void Player::ProcessInput(void)
 			animationController_->IsEndBlendingPlayAnimation("FIRST_COMBO"))
 		{
 			isAttack_ = false;
+			currentAnimType_ = ANIM_TYPE::IDLE;
 		}
 		else
 		{
@@ -196,6 +197,7 @@ void Player::ProcessInput(void)
 		{
 			rotRad_ = static_cast<float>(Utility::Deg2RadD(0.0f));
 			animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::SMASH]);
+			currentAnimType_ = ANIM_TYPE::SMASH;
 			isAttack_ = true;
 			backInputFrame_ = -1;
 			return;
@@ -217,6 +219,7 @@ void Player::ProcessInput(void)
 	if (readyHighTime_ && nowForwardPressed && ins.IsPressed(InputManager::ACTION::ATTACK))
 	{
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::HIGHTIME]);
+		currentAnimType_ = ANIM_TYPE::HIGHTIME;
 		isAttack_ = true;
 		moveForwardCount_ = 0;
 		readyHighTime_ = false;
@@ -257,6 +260,7 @@ void Player::ProcessInput(void)
 	{
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::FIRST_COMBO]);
 		isAttack_ = true;
+		currentAnimType_ = ANIM_TYPE::FIRST_COMBO;
 		return;
 	}
 
@@ -331,6 +335,11 @@ const VECTOR& Player::GetRightHandPos() const
 std::shared_ptr<Weapon> Player::GetWeapon() const
 {
 	return weapon_;
+}
+
+Player::ANIM_TYPE Player::GetCurrentAnimType() const
+{
+	return currentAnimType_;
 }
 
 void Player::SetPos(const VECTOR& pos)

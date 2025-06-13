@@ -6,7 +6,7 @@ ActorBase::ActorBase():
 	scnMng_(SceneManager::GetInstance()),
     resMng_(ResourceManager::GetInstance()),
     position_(transform_.pos), 
-    hp_(100), 
+	hp_(100), isInvincible_(false),
     transform_(-1),isAlive_(true)
 {
 }
@@ -19,6 +19,25 @@ ActorBase::~ActorBase()
 		// ƒ‚ƒfƒ‹ƒnƒ“ƒhƒ‹‚ğíœ
         MV1DeleteModel(transform_.modelId);
     }
+}
+
+void ActorBase::Damage(int damageAmount)
+{
+    if (isInvincible_)
+    {
+        return;
+    }
+    else
+    {
+        hp_ -= damageAmount;
+    }
+
+    if (hp_ <= 0)
+    {
+        hp_ = 0;
+        isAlive_ = false;
+    }
+   
 }
 
 int ActorBase::GetHP() const 

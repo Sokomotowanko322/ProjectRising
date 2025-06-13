@@ -15,6 +15,7 @@ public:
 
     virtual void Update(void) = 0;
     virtual void Draw(void) = 0;
+    virtual void Damage(int amount);
 
    
 	// 取得系
@@ -48,13 +49,17 @@ protected:
 
 #pragma endregion
 
-private:
 
 #pragma region フラグ
 
     // 生存フラグ
-	bool isAlive_;
-  
+    bool isAlive_;
+
+    // 無敵フラグ
+	bool isInvincible_;
 
 #pragma endregion 
+
+private:
+
 };
