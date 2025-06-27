@@ -1,8 +1,17 @@
 #include <DxLib.h>
 #include "../Utility/CollisionUtility.h"
 #include "../Object/Unit/Player.h"
+#include "../Object/Unit/NormalEnemy.h"
 #include "../Object/Weapon.h"
 #include "ColliderManager.h"
+
+// プレイヤー攻撃アニメ種別→敵のリアクション
+static const std::unordered_map<Player::ANIM_TYPE, std::function<void(NormalEnemy*, const VECTOR&)>> reactionTable_ = 
+{
+    { Player::ANIM_TYPE::SMASH,      [](NormalEnemy* e, const VECTOR& dir) { e->ChangeState(NormalEnemy::STATE::FLINCH); } },
+    { Player::ANIM_TYPE::FIRST_COMBO,[](NormalEnemy* e, const VECTOR& dir) { e->ChangeState(NormalEnemy::STATE::FLINCH); } },
+    { Player::ANIM_TYPE::HIGHTIME,   [](NormalEnemy* e, const VECTOR& dir) { e->ChangeState(NormalEnemy::STATE::FLINCH); } },
+};
 
 void ColliderManager::RegisterActor(const std::shared_ptr<ActorBase>& actor)
 {
@@ -138,13 +147,33 @@ void ColliderManager::CheckCollisions() {
                 {
                     ResolveCapsuleCollision(a, b); // 追加：自機と敵など
                 }
-                else if (a.isTrigger_ && !b.isTrigger_) {
-                    
-                }
-                else if (!a.isTrigger_ && b.isTrigger_) {
-                    
+               
+            }
+
+            // aが攻撃側（Weapon）、bが敵（NormalEnemy）の場合
+            ActorBase* actorA = nullptr;
+            ActorBase* actorB = nullptr;
+            for (auto& weakActor : actors_) {
+                if (auto actor = weakActor.lock()) {
+                    if (actor->GetTransform().modelId == a.ownerID_) actorA = actor.get();
+                    if (actor->GetTransform().modelId == b.ownerID_) actorB = actor.get();
                 }
             }
+            Weapon* weapon = dynamic_cast<Weapon*>(actorA);
+            NormalEnemy* enemy = dynamic_cast<NormalEnemy*>(actorB);
+            if (weapon && enemy) {
+                // Playerを探して攻撃中か判定
+                for (auto& weakActor : actors_) {
+                    if (auto actor = weakActor.lock()) {
+                        Player* player = dynamic_cast<Player*>(actor.get());
+                        if (player && player->GetWeapon().get() == weapon && player->IsAttack()) {
+                            HitAttackToDamage(a, b);
+                            break;
+                        }
+                    }
+                }
+            }
+
 
             if (a.type_ == ColliderType::Capsule && b.type_ == ColliderType::StageTransform) {
                 ResolveStageCollision(a, b);
@@ -237,5 +266,33 @@ void ColliderManager::HitAttackToDamage(const ColliderData& self, const Collider
     if (!attacker || !victim) 
     {
         return;
+    }
+    // Weapon→NormalEnemy の場合
+    if (auto weapon = dynamic_cast<Weapon*>(attacker)) {
+        if (auto enemy = dynamic_cast<NormalEnemy*>(victim)) {
+            // Playerを探す
+            for (auto& weakActor : actors_) {
+                if (auto actor = weakActor.lock()) {
+                    auto player = dynamic_cast<Player*>(actor.get());
+                    if (player && player->GetWeapon().get() == weapon && player->IsAttack()) {
+                        enemy->Damage(1); // ダメージ量は適宜
+                        return;
+                    }
+                }
+            }
+        }
+    }
+    // プレイヤー攻撃→敵の場合のみ判定をする
+    Player* player = dynamic_cast<Player*>(attacker);
+    NormalEnemy* enemy = dynamic_cast<NormalEnemy*>(victim);
+    if (player && enemy) 
+    {
+        auto animType = player->GetCurrentAnimType();
+        auto it = reactionTable_.find(animType);
+        if (it != reactionTable_.end())
+        {
+            VECTOR dir = VNorm(VSub(enemy->GetPos(), player->GetPos()));
+            it->second(enemy, dir); // 関数テーブルでリアクション実行
+        }
     }
 }

@@ -1,5 +1,7 @@
 #pragma once
 #include <DxLib.h>
+#include <unordered_map>
+#include <functional>
 #include "../../Object/Transform.h"
 
 class SceneManager;

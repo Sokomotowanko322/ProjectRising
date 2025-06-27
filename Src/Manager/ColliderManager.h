@@ -1,6 +1,8 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include <unordered_map>
+#include <functional>
 #include "../Collider/ColliderData.h"
 #include "../Object/Unit/ActorBase.h"
 

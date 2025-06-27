@@ -35,7 +35,7 @@ rotationStep_(0.0f)
 	stateChange_[STATE::IDLE] = std::bind(&NormalEnemy::ChangeIdle, this);
 	stateChange_[STATE::WALK] = std::bind(&NormalEnemy::ChangeClose, this);
 	stateChange_[STATE::ATTACK] = std::bind(&NormalEnemy::ChangeAttack, this);
-	stateChange_[STATE::DAMAGED] = std::bind(&NormalEnemy::ChangeDamaged, this);
+	stateChange_[STATE::FLINCH] = std::bind(&NormalEnemy::ChangeFlinch, this);
 }
 
 NormalEnemy::~NormalEnemy()
@@ -119,6 +119,9 @@ void NormalEnemy::InitAnimation(void)
 	// 移動アニメーション
 	animationController_->Add("WALK", path + "Walk.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::NORMAL_ENEMY_WALK), false, 0, false);
+	// 通常ダメージアニメーション
+	animationController_->Add("FLINCH", path + "Flinch.mv1",
+		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::ENEMY_FLINCH), false, 0, false);
 }
 
 void NormalEnemy::ChangeIdle(void)
@@ -136,9 +139,9 @@ void NormalEnemy::ChangeAttack(void)
 	stateUpdate_ = std::bind(&NormalEnemy::UpdateAttack, this);
 }
 
-void NormalEnemy::ChangeDamaged(void)
+void NormalEnemy::ChangeFlinch(void)
 {
-	stateUpdate_ = std::bind(&NormalEnemy::UpdateDamaged, this);
+	stateUpdate_ = std::bind(&NormalEnemy::UpdateFlinch, this);
 }
 
 void NormalEnemy::UpdateIdle(void)
@@ -173,9 +176,6 @@ void NormalEnemy::UpdateIdle(void)
 	{
 		animationController_->ChangeAnimation("IDLE");
 	}
-
-	// プレイヤーの座標を取得
-	VECTOR pPos = player_.lock()->GetPos();
 
 	// エネミーからプレイヤーまでのベクトル
 	VECTOR diff = VSub(pPos, transform_.pos);
@@ -220,6 +220,11 @@ void NormalEnemy::UpdateAttack(void)
 {
 }
 
-void NormalEnemy::UpdateDamaged(void)
+void NormalEnemy::UpdateFlinch(void)
 {
+	if (animationController_->IsEndPlayAnimation())
+	{
+		// アニメーションが終わったらIDLEに戻る
+		ChangeState(STATE::IDLE);
+	}
 }

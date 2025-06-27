@@ -64,6 +64,9 @@ public:
 
 	// プレイヤーの位置をコライダと合わせる
 	void SetPos(const VECTOR& pos)override;
+
+	// 攻撃状態かどうか
+	bool IsAttack() const;
 	
 private:
 

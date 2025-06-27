@@ -347,6 +347,11 @@ void Player::SetPos(const VECTOR& pos)
 	transform_.pos = pos;
 }
 
+bool Player::IsAttack() const
+{
+	return isAttack_;
+}
+
 void Player::InitAnimation(void)
 {
 	std::string path = Application::PATH_MODEL + "Player/Anim/";

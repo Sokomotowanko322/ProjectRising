@@ -4,12 +4,12 @@
 
 struct ColliderData 
 {
-    ColliderType type_;
-    VECTOR pos_;      // 始点 or 中心
-    VECTOR dir_;      // 単位ベクトル
-    float length_;    // カプセル長さ
-    float radius_;    // 半径
-    int ownerID_;     // 所属アクターID
-    bool isTrigger_;  // トリガーかどうか
-    bool isRightHand_ = false; // 追加
+	ColliderType type_;         // コライダの種類
+    VECTOR pos_;                // 始点 or 中心
+    VECTOR dir_;                // 単位ベクトル
+    float length_;              // カプセル長さ
+    float radius_;              // 半径
+    int ownerID_;               // 所属アクターID
+    bool isTrigger_;            // トリガーかどうか
+    bool isRightHand_ = false;  // 右腕用のコライダかどうかを判定
 };

@@ -8,14 +8,14 @@ class Player;
 class NormalEnemy : public ActorBase
 {
 public:
-	
+
 	enum class STATE
 	{
 		IDLE,
 		WALK,
 		//RUN,
 		ATTACK,
-		DAMAGED
+		FLINCH
 	};
 
 	// アニメーション種別
@@ -25,7 +25,7 @@ public:
 		WALK,
 		//RUN,
 		ATTACK,
-		DAMAGED,
+		FLINCH,
 		ALL
 	};
 
@@ -36,7 +36,7 @@ public:
 		"WALK",
 		/*"RUN",*/
 		"ATTACK",
-		"DAMAGED",
+		"FLINCH",
 	};
 
 	// コンストラクタ
@@ -90,14 +90,14 @@ private:
 	void ChangeIdle(void);
 	void ChangeClose(void);
 	void ChangeAttack(void);
-	void ChangeDamaged(void);
+	void ChangeFlinch(void);
 
 	// 更新
 	std::function<void(void)> stateUpdate_;
 	void UpdateIdle(void);
 	void UpdateClose(void);
 	void UpdateAttack(void);
-	void UpdateDamaged(void);
+	void UpdateFlinch(void);
 
 	// 回転の差分
 	VECTOR diff_;
