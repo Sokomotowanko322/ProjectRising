@@ -54,6 +54,9 @@ void GameScene::Init(void)
 
 void GameScene::AddColliders(void)
 {
+	printfDx("AddCollider: weapon modelId=%d, ownerID_=%d\n",
+		player_->GetWeapon()->GetWeaponTransform().modelId);
+
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
 		player_->GetPos(),
@@ -120,7 +123,7 @@ void GameScene::Update(void)
 
 	// ”wŒi’Ç]
 	skyDome_->Update();
-
+	//945029137
 	// ƒvƒŒƒCƒ„[‚ÌXV
 	player_->Update();
 
