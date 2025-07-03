@@ -87,6 +87,27 @@ void ColliderManager::Update()
     }
 }
 
+bool ColliderManager::IsWeaponEnemyPair(const ColliderData& weaponCol, const ColliderData& enemyCol)
+{
+    ActorBase* weaponActor = nullptr;
+    ActorBase* enemyActor = nullptr;
+    for (auto& weakActor : actors_) {
+        if (auto actor = weakActor.lock()) {
+            // Weaponの判定はweaponTransformのmodelIdで行う
+            if (auto weapon = dynamic_cast<Weapon*>(actor.get())) {
+                if (weapon->GetWeaponTransform().modelId == weaponCol.ownerID_) {
+                    weaponActor = actor.get();
+                }
+            }
+            // Enemyは従来通り
+            if (actor->GetTransform().modelId == enemyCol.ownerID_) {
+                enemyActor = actor.get();
+            }
+        }
+    }
+    return dynamic_cast<Weapon*>(weaponActor) && dynamic_cast<NormalEnemy*>(enemyActor);
+}
+
 void ColliderManager::UpdateColliders()
 {
     for (auto& weakActor : actors_)
@@ -97,16 +118,14 @@ void ColliderManager::UpdateColliders()
         int actorId = actor->GetTransform().modelId;
         Player* player = dynamic_cast<Player*>(actor.get());
         Weapon* weapon = dynamic_cast<Weapon*>(actor.get());
+        NormalEnemy* enemy = dynamic_cast<NormalEnemy*>(actor.get());
 
         for (auto& col : colliders_)
         {
             if (col.type_ != ColliderType::Capsule) continue;
 
+            // 1. 武器コライダー
             if (weapon && col.ownerID_ == weapon->GetWeaponTransform().modelId) {
-             //   // デバッグ出力
-             //printfDx("UpdateColliders: col.ownerID_=%d, weaponModelId=%d\n",
-             //       col.ownerID_, weapon->GetWeaponTransform().modelId);
-                // 武器コライダの更新
                 const Transform& trans = weapon->GetWeaponTransform();
                 VECTOR scl = trans.scl;
                 VECTOR pos = trans.pos;
@@ -124,12 +143,22 @@ void ColliderManager::UpdateColliders()
                 col.pos_ = center;
                 col.dir_ = dir;
                 col.length_ = height;
+                continue;
             }
-            else if (player && col.isRightHand_ && col.ownerID_ == actorId) {
+            // 2. プレイヤー右手コライダー
+            if (player && col.isRightHand_ && col.ownerID_ == player->GetTransform().modelId) {
                 col.pos_ = player->GetRightHandPos();
+                continue;
             }
-            else if (col.ownerID_ == actorId) {
-                col.pos_ = actor->GetPos();
+            // 3. プレイヤー本体コライダー
+            if (player && !col.isRightHand_ && col.ownerID_ == player->GetTransform().modelId) {
+                col.pos_ = player->GetPos();
+                continue;
+            }
+            // 4. 敵本体コライダー
+            if (enemy && col.ownerID_ == enemy->GetTransform().modelId) {
+                col.pos_ = enemy->GetPos();
+                continue;
             }
         }
     }
@@ -141,66 +170,69 @@ void ColliderManager::CheckCollisions() {
             ColliderData& a = colliders_[i];
             ColliderData& b = colliders_[j];
 
-            // カプセル同士の衝突解決
-            if (a.type_ == ColliderType::Capsule && b.type_ == ColliderType::Capsule) {
-                if (!a.isTrigger_ && !b.isTrigger_) {
-                    ResolveCapsuleCollision(a, b);
-                }
+            // 本体同士の物理衝突
+            if (a.type_ == ColliderType::Capsule && b.type_ == ColliderType::Capsule &&
+                !a.isTrigger_ && !b.isTrigger_) {
+                ResolveCapsuleCollision(a, b);
+                continue;
             }
 
-            // --- 攻撃判定（PlayerのGetWeapon()を利用） ---
-            // aが武器コライダ、bが敵コライダの場合
-            for (auto& weakActor : actors_) {
-                if (auto actor = weakActor.lock()) {
-                    Player* player = dynamic_cast<Player*>(actor.get());
-                    if (!player) continue;
-                    auto weapon = player->GetWeapon().get();
-                    if (!weapon) 
-                    {
-                        continue;
-                    }
+            // 武器コライダと敵コライダの攻撃判定（a→b, b→a両方）
+            for (int k = 0; k < 2; ++k) {
+                ColliderData& weaponCol = (k == 0) ? a : b;
+                ColliderData& enemyCol = (k == 0) ? b : a;
+                if (weaponCol.type_ == ColliderType::Capsule && weaponCol.isTrigger_ &&
+                    enemyCol.type_ == ColliderType::Capsule && !enemyCol.isTrigger_ &&
+                    IsWeaponEnemyPair(weaponCol, enemyCol)) {
 
-                    // aがこのPlayerの武器コライダ、bがNormalEnemy
-                    if (a.ownerID_ == player->GetWeapon()->GetWeaponTransform().modelId) {
-                        for (auto& weakEnemy : actors_) {
-                            if (auto enemyActor = weakEnemy.lock()) {
-                                NormalEnemy* enemy = dynamic_cast<NormalEnemy*>(enemyActor.get());
-                                if (enemy && b.ownerID_ == enemyActor->GetTransform().modelId) {
-                                    if (player->IsAttack()) {
-                                        HitAttackToDamage(a, b);
-                                    }
-                                }
+                    // カプセル端点
+                    VECTOR wStart = VAdd(weaponCol.pos_, VScale(weaponCol.dir_, -weaponCol.length_ * 0.5f));
+                    VECTOR wEnd = VAdd(weaponCol.pos_, VScale(weaponCol.dir_, weaponCol.length_ * 0.5f));
+                    VECTOR eStart = VAdd(enemyCol.pos_, VScale(enemyCol.dir_, -enemyCol.length_ * 0.5f));
+                    VECTOR eEnd = VAdd(enemyCol.pos_, VScale(enemyCol.dir_, enemyCol.length_ * 0.5f));
+                    float minDist = CollisionUtility::GetSegmentSegmentDistance(wStart, wEnd, eStart, eEnd);
+
+                    if (minDist <= weaponCol.radius_ + enemyCol.radius_) {
+                        // Weaponインスタンス取得
+                        Weapon* weapon = nullptr;
+                        for (auto& weakActor : actors_) {
+                            if (auto actor = weakActor.lock()) {
+                                weapon = dynamic_cast<Weapon*>(actor.get());
+                                if (weapon && weapon->GetWeaponTransform().modelId == weaponCol.ownerID_) break;
                             }
                         }
-                    }
-                    // bがこのPlayerの武器コライダ、aがNormalEnemy
-                    if (b.ownerID_ == weapon->GetWeaponTransform().modelId) {
-                        for (auto& weakEnemy : actors_) {
-                            if (auto enemyActor = weakEnemy.lock()) {
-                                NormalEnemy* enemy = dynamic_cast<NormalEnemy*>(enemyActor.get());
-                                if (enemy && a.ownerID_ == enemyActor->GetTransform().modelId) {
-                                    if (player->IsAttack()) {
-                                        //// ★ここで出力すると、どのownerID_とmodelIdで判定しているか分かる
-                                        //printfDx("判定直前: a.ownerID_=%d, b.ownerID_=%d, weaponModelId=%d\n",
-                                        //    a.ownerID_, b.ownerID_, player->GetWeapon()->GetWeaponTransform().modelId);
-                                        HitAttackToDamage(b, a);
-                                    }
-                                }
-                            }
+                        if (!weapon) continue;
+                        Player* player = FindPlayerByWeapon(weapon);
+                        if (player && player->IsAttack()) {
+                            HitAttackToDamage(weaponCol, enemyCol, player);
                         }
                     }
                 }
             }
-
             // ステージとの衝突
             if (a.type_ == ColliderType::Capsule && b.type_ == ColliderType::StageTransform) {
                 ResolveStageCollision(a, b);
+                continue;
             }
-            else if (b.type_ == ColliderType::Capsule && a.type_ == ColliderType::StageTransform) {
+            if (b.type_ == ColliderType::Capsule && a.type_ == ColliderType::StageTransform) {
                 ResolveStageCollision(b, a);
+                continue;
             }
         }
     }
+}
+
+Player* ColliderManager::FindPlayerByWeapon(Weapon* weapon)
+{
+    for (auto& weakActor : actors_) {
+        if (auto actor = weakActor.lock()) {
+            auto player = dynamic_cast<Player*>(actor.get());
+            if (player && player->GetWeapon().get() == weapon) {
+                return player;
+            }
+        }
+    }
+    return nullptr;
 }
 
 void ColliderManager::ResolveStageCollision(ColliderData& mover, const ColliderData& stage)
@@ -262,74 +294,28 @@ void ColliderManager::ResolveCapsuleCollision(ColliderData& a, ColliderData& b)
     }
 }
 
-void ColliderManager::HitAttackToDamage(const ColliderData& self, const ColliderData& target) 
+// プレイヤーを引数で受け取る形に変更
+void ColliderManager::HitAttackToDamage(const ColliderData& self, const ColliderData& target, Player* player)
 {
-    // ここでownerID_や引数の情報を出力
-    //printfDx("HitAttackToDamage: self.ownerID_=%d, target.ownerID_=%d\n", self.ownerID_, target.ownerID_);
-   
-    // ownerIDからアクターを特定
-    ActorBase* attacker = nullptr;
     ActorBase* victim = nullptr;
-
-    if (attacker) {
-        printfDx("attacker type: %s\n", typeid(*attacker).name());
+    for (auto& weakActor : actors_) {
+        if (auto actor = weakActor.lock()) {
+            if (actor->GetTransform().modelId == target.ownerID_) {
+                victim = actor.get();
+                break;
+            }
+        }
     }
+    if (!victim || !player) return;
 
     if (auto enemy = dynamic_cast<NormalEnemy*>(victim)) {
-        printfDx("HitAttackToDamage: NormalEnemy modelId=%d, target.ownerID_=%d\n", enemy->GetTransform().modelId, target.ownerID_);
-    }
-    for (auto& weakActor : actors_)
-    {
-        if (auto actor = weakActor.lock()) 
-        {
-            if (actor->GetTransform().modelId == self.ownerID_) 
-            {
-                attacker = actor.get();
-            }
-            if (actor->GetTransform().modelId == target.ownerID_) 
-            {
-                victim = actor.get();
-            }
+        // リアクションテーブル実行
+        auto animType = player->GetCurrentAnimType();
+        auto it = reactionTable_.find(animType);
+        if (it != reactionTable_.end()) {
+            VECTOR dir = VNorm(VSub(enemy->GetPos(), player->GetPos()));
+            it->second(enemy, dir);
         }
+        enemy->Damage(1);
     }
-    if (!attacker || !victim) 
-    {
-        return;
-    }
-    
-    // Weapon→NormalEnemy の場合
-    if (auto weapon = dynamic_cast<Weapon*>(attacker)) {
-        if (auto enemy = dynamic_cast<NormalEnemy*>(victim)) {
-            // Playerを探す
-            for (auto& weakActor : actors_) {
-                if (auto actor = weakActor.lock()) {
-                    auto player = dynamic_cast<Player*>(actor.get());
-                    if (player && player->GetWeapon().get() == weapon && player->IsAttack()) {
-                        // ★ここでリアクションテーブルを実行
-                        auto animType = player->GetCurrentAnimType();
-                        auto it = reactionTable_.find(animType);
-                        if (it != reactionTable_.end()) {
-                            VECTOR dir = VNorm(VSub(enemy->GetPos(), player->GetPos()));
-                            it->second(enemy, dir);
-                        }
-                        enemy->Damage(1); // ダメージ量は適宜
-                        return;
-                    }
-                }
-            }
-        }
-    }
-    //// プレイヤー攻撃→敵の場合のみ判定をする
-    //Player* player = dynamic_cast<Player*>(attacker);
-    //NormalEnemy* enemy = dynamic_cast<NormalEnemy*>(victim);
-    //if (player && enemy) 
-    //{
-    //    auto animType = player->GetCurrentAnimType();
-    //    auto it = reactionTable_.find(animType);
-    //    if (it != reactionTable_.end())
-    //    {
-    //        VECTOR dir = VNorm(VSub(enemy->GetPos(), player->GetPos()));
-    //        it->second(enemy, dir); // 関数テーブルでリアクション実行
-    //    }
-    //}
 }

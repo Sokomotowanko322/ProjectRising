@@ -7,6 +7,7 @@
 #include "../Object/Unit/ActorBase.h"
 
 class ActorBase;
+class Weapon;
 
 class ColliderManager 
 {
@@ -24,6 +25,9 @@ public:
     // まとめて更新
     void Update();
 
+	// 衝突判定を行う
+    bool IsWeaponEnemyPair(const ColliderData& weaponCol, const ColliderData& enemyCol);
+
 private:
 
     // 複数アクターを管理
@@ -38,8 +42,10 @@ private:
     // 当たり判定をチェック
     void CheckCollisions();
     
+    Player* FindPlayerByWeapon(Weapon* weapon);
+
 	// 衝突時処理類
     void ResolveStageCollision(ColliderData& mover, const ColliderData& stage);
     void ResolveCapsuleCollision(ColliderData& a, ColliderData& b);
-    void HitAttackToDamage(const ColliderData& self, const ColliderData& target);
+    void HitAttackToDamage(const ColliderData& self, const ColliderData& target, Player* player);
 };

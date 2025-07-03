@@ -38,7 +38,7 @@ void GameScene::Init(void)
 	colMng_->RegisterActor(player_->GetWeapon());
 
 	// --- ここで一度WeaponのmodelIdを確認 ---
-	printfDx("Weapon modelId after Init: %d\n", player_->GetWeapon()->GetTransform().modelId);
+	printfDx("Player modelId after Init: %d\n", player_->GetTransform().modelId);
 
 	// スカイドーム
 	skyDome_ = std::make_unique<SkyDome>(player_->GetTransform());
@@ -73,7 +73,7 @@ void GameScene::AddColliders(void)
 		1.0f,
 		10.0f,
 		player_->GetTransform().modelId,
-		true,	// 貫通する
+		false,	// 貫通する
 		true	// 右腕コライダか判定
 	));
 	colMng_->AddCollider(ColliderData(
@@ -101,7 +101,10 @@ void GameScene::AddColliders(void)
 	VECTOR center = VScale(VAdd(tipWorld, baseWorld), 0.5f);
 	VECTOR dir = VNorm(VSub(tipWorld, baseWorld));
 	float height = VSize(VSub(tipWorld, baseWorld));
-
+	printfDx("player modelId=%d, weapon modelId=%d, enemy modelId=%d\n",
+		player_->GetTransform().modelId,
+		player_->GetWeapon()->GetWeaponTransform().modelId,
+		normalEnemy_->GetTransform().modelId);
 	// コライダ追加
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
