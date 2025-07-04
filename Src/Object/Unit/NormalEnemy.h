@@ -15,7 +15,8 @@ public:
 		WALK,
 		//RUN,
 		ATTACK,
-		FLINCH
+		FLINCH,
+		BLOW
 	};
 
 	// アニメーション種別
@@ -26,6 +27,7 @@ public:
 		//RUN,
 		ATTACK,
 		FLINCH,
+		BLOW,
 		ALL
 	};
 
@@ -37,6 +39,7 @@ public:
 		/*"RUN",*/
 		"ATTACK",
 		"FLINCH",
+		"BLOW",
 	};
 
 	// コンストラクタ
@@ -91,6 +94,7 @@ private:
 	void ChangeClose(void);
 	void ChangeAttack(void);
 	void ChangeFlinch(void);
+	void ChangeBlow(void);
 
 	// 更新
 	std::function<void(void)> stateUpdate_;
@@ -98,6 +102,7 @@ private:
 	void UpdateClose(void);
 	void UpdateAttack(void);
 	void UpdateFlinch(void);
+	void UpdateBlow(void);
 
 	// 回転の差分
 	VECTOR diff_;

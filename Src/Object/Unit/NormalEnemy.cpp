@@ -144,6 +144,11 @@ void NormalEnemy::ChangeFlinch(void)
 	stateUpdate_ = std::bind(&NormalEnemy::UpdateFlinch, this);
 }
 
+void NormalEnemy::ChangeBlow(void)
+{
+	stateUpdate_ = std::bind(&NormalEnemy::UpdateBlow, this);
+}
+
 void NormalEnemy::UpdateIdle(void)
 {
 	// 回転
@@ -223,6 +228,15 @@ void NormalEnemy::UpdateAttack(void)
 void NormalEnemy::UpdateFlinch(void)
 {
 	if (animationController_->IsEndPlayAnimation())
+	{
+		// アニメーションが終わったらIDLEに戻る
+		ChangeState(STATE::IDLE);
+	}
+}
+
+void NormalEnemy::UpdateBlow(void)
+{
+	if (animationController_->IsEndPlayAnimation() && transform_.pos.y == 0.0f)
 	{
 		// アニメーションが終わったらIDLEに戻る
 		ChangeState(STATE::IDLE);

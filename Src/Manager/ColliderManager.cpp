@@ -124,17 +124,26 @@ void ColliderManager::UpdateColliders()
         {
             if (col.type_ != ColliderType::Capsule) continue;
 
-            // 1. 武器コライダー
+            // --- 武器コライダの完全追従例 ---
             if (weapon && col.ownerID_ == weapon->GetWeaponTransform().modelId) {
                 const Transform& trans = weapon->GetWeaponTransform();
                 VECTOR scl = trans.scl;
                 VECTOR pos = trans.pos;
                 Quaternion rot = trans.quaRot;
 
-                VECTOR tipWorld = VAdd(pos, Quaternion::PosAxis(rot, { 1200.0f * scl.x, 0.0f, 0.0f }));
-                tipWorld.x += 30.0f;
-                tipWorld.y += 16.0f;
-                VECTOR baseWorld = VAdd(pos, Quaternion::PosAxis(rot, { 0.0f, 0.0f, 0.0f }));
+                VECTOR handleBaseLocal = { 0.0f, 0.0f, 0.0f };
+                VECTOR bladeTipLocal = { 1200.0f, 0.0f, 0.0f };
+
+                // スケール適用
+                handleBaseLocal.x *= scl.x;
+                handleBaseLocal.y *= scl.y;
+                handleBaseLocal.z *= scl.z;
+                bladeTipLocal.x *= scl.x;
+                bladeTipLocal.y *= scl.y;
+                bladeTipLocal.z *= scl.z;
+
+                VECTOR baseWorld = VAdd(pos, Quaternion::PosAxis(rot, handleBaseLocal));
+                VECTOR tipWorld = VAdd(pos, Quaternion::PosAxis(rot, bladeTipLocal));
 
                 VECTOR center = VScale(VAdd(tipWorld, baseWorld), 0.5f);
                 VECTOR dir = VNorm(VSub(tipWorld, baseWorld));
@@ -177,38 +186,61 @@ void ColliderManager::CheckCollisions() {
                 continue;
             }
 
-            // 武器コライダと敵コライダの攻撃判定（a→b, b→a両方）
-            for (int k = 0; k < 2; ++k) {
-                ColliderData& weaponCol = (k == 0) ? a : b;
-                ColliderData& enemyCol = (k == 0) ? b : a;
-                if (weaponCol.type_ == ColliderType::Capsule && weaponCol.isTrigger_ &&
-                    enemyCol.type_ == ColliderType::Capsule && !enemyCol.isTrigger_ &&
-                    IsWeaponEnemyPair(weaponCol, enemyCol)) {
+            // --- 武器コライダと敵コライダの攻撃判定 ---
+            // aが武器コライダ、bが敵コライダの場合
+            if (a.type_ == ColliderType::Capsule && a.isTrigger_ &&
+                b.type_ == ColliderType::Capsule && !b.isTrigger_ &&
+                IsWeaponEnemyPair(a, b)) {
 
-                    // カプセル端点
-                    VECTOR wStart = VAdd(weaponCol.pos_, VScale(weaponCol.dir_, -weaponCol.length_ * 0.5f));
-                    VECTOR wEnd = VAdd(weaponCol.pos_, VScale(weaponCol.dir_, weaponCol.length_ * 0.5f));
-                    VECTOR eStart = VAdd(enemyCol.pos_, VScale(enemyCol.dir_, -enemyCol.length_ * 0.5f));
-                    VECTOR eEnd = VAdd(enemyCol.pos_, VScale(enemyCol.dir_, enemyCol.length_ * 0.5f));
-                    float minDist = CollisionUtility::GetSegmentSegmentDistance(wStart, wEnd, eStart, eEnd);
+                // カプセル端点
+                VECTOR wStart = VAdd(a.pos_, VScale(a.dir_, -a.length_ * 0.5f));
+                VECTOR wEnd = VAdd(a.pos_, VScale(a.dir_, a.length_ * 0.5f));
+                VECTOR eStart = VAdd(b.pos_, VScale(b.dir_, -b.length_ * 0.5f));
+                VECTOR eEnd = VAdd(b.pos_, VScale(b.dir_, b.length_ * 0.5f));
+                float minDist = CollisionUtility::GetSegmentSegmentDistance(wStart, wEnd, eStart, eEnd);
 
-                    if (minDist <= weaponCol.radius_ + enemyCol.radius_) {
-                        // Weaponインスタンス取得
-                        Weapon* weapon = nullptr;
-                        for (auto& weakActor : actors_) {
-                            if (auto actor = weakActor.lock()) {
-                                weapon = dynamic_cast<Weapon*>(actor.get());
-                                if (weapon && weapon->GetWeaponTransform().modelId == weaponCol.ownerID_) break;
-                            }
+                if (minDist <= a.radius_ + b.radius_) {
+                    Weapon* weapon = nullptr;
+                    for (auto& weakActor : actors_) {
+                        if (auto actor = weakActor.lock()) {
+                            weapon = dynamic_cast<Weapon*>(actor.get());
+                            if (weapon && weapon->GetWeaponTransform().modelId == a.ownerID_) break;
                         }
-                        if (!weapon) continue;
-                        Player* player = FindPlayerByWeapon(weapon);
-                        if (player && player->IsAttack()) {
-                            HitAttackToDamage(weaponCol, enemyCol, player);
-                        }
+                    }
+                    if (!weapon) continue;
+                    Player* player = FindPlayerByWeapon(weapon);
+                    if (player && player->IsAttack()) {
+                        HitAttackToDamage(a, b, player);
                     }
                 }
             }
+            // bが武器コライダ、aが敵コライダの場合（逆も判定）
+            else if (b.type_ == ColliderType::Capsule && b.isTrigger_ &&
+                a.type_ == ColliderType::Capsule && !a.isTrigger_ &&
+                IsWeaponEnemyPair(b, a)) {
+
+                VECTOR wStart = VAdd(b.pos_, VScale(b.dir_, -b.length_ * 1.4f));
+                VECTOR wEnd = VAdd(b.pos_, VScale(b.dir_, b.length_ * 1.4f));
+                VECTOR eStart = VAdd(a.pos_, VScale(a.dir_, -a.length_ * 1.4f));
+                VECTOR eEnd = VAdd(a.pos_, VScale(a.dir_, a.length_ * 1.4f));
+                float minDist = CollisionUtility::GetSegmentSegmentDistance(wStart, wEnd, eStart, eEnd);
+
+                if (minDist <= b.radius_ + a.radius_) {
+                    Weapon* weapon = nullptr;
+                    for (auto& weakActor : actors_) {
+                        if (auto actor = weakActor.lock()) {
+                            weapon = dynamic_cast<Weapon*>(actor.get());
+                            if (weapon && weapon->GetWeaponTransform().modelId == b.ownerID_) break;
+                        }
+                    }
+                    if (!weapon) continue;
+                    Player* player = FindPlayerByWeapon(weapon);
+                    if (player && player->IsAttack()) {
+                        HitAttackToDamage(b, a, player);
+                    }
+                }
+            }
+
             // ステージとの衝突
             if (a.type_ == ColliderType::Capsule && b.type_ == ColliderType::StageTransform) {
                 ResolveStageCollision(a, b);
