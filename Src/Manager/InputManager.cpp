@@ -138,21 +138,25 @@ InputManager::InputManager(void)
     inputActionMaps_[ACTION::MOVE_FORWARD] =
     {
         {InputType::KEYBOARD ,KEY_INPUT_W },
+		{InputType::GAMEPAD_STICK,(int)JOYPAD_STICK::L_STICK_UP }
     };
 
     inputActionMaps_[ACTION::MOVE_BACK] =
     {
         {InputType::KEYBOARD ,KEY_INPUT_S },
+        {InputType::GAMEPAD_STICK, (int)JOYPAD_STICK::L_STICK_DOWN }
     };
 
     inputActionMaps_[ACTION::MOVE_LEFT] =
     {
-        {InputType::KEYBOARD ,KEY_INPUT_A },
+      {InputType::KEYBOARD ,KEY_INPUT_A },
+      {InputType::GAMEPAD_STICK, (int)JOYPAD_STICK::L_STICK_LEFT }
     };
 
-    inputActionMaps_[ACTION::MOVE_RIGHT] =
+    inputActionMaps_[ACTION::MOVE_RIGHT] = 
     {
         {InputType::KEYBOARD ,KEY_INPUT_D },
+        {InputType::GAMEPAD_STICK, (int)JOYPAD_STICK::L_STICK_RIGHT }
     };
 
     inputActionMaps_[ACTION::MOVE_PAD] =

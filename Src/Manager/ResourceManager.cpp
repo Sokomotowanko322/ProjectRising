@@ -129,6 +129,10 @@ void ResourceManager::Init(void)
 	// éÄñSÇ‚É_ÉÅÅ[ÉW
 	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Enemy/Anim/Flinch.mv1");
 	resourcesMap_.emplace(SRC::ENEMY_FLINCH, std::move(res));
+	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Enemy/Anim/Blow.mv1");
+	resourcesMap_.emplace(SRC::ENEMY_BLOW, std::move(res));
+	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Enemy/Anim/BlowAway.mv1");
+	resourcesMap_.emplace(SRC::ENEMY_BLOW_AWAY, std::move(res));
 	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Enemy/NormalEnemyAnim/Death.mv1");
 	resourcesMap_.emplace(SRC::NORMAL_ENEMY_DEATH, std::move(res));
 

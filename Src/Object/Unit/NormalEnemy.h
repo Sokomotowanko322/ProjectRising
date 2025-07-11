@@ -16,7 +16,8 @@ public:
 		//RUN,
 		ATTACK,
 		FLINCH,
-		BLOW
+		BLOW,
+		BLOW_AWAY,
 	};
 
 	// アニメーション種別
@@ -28,6 +29,7 @@ public:
 		ATTACK,
 		FLINCH,
 		BLOW,
+		BLOW_AWAY,
 		ALL
 	};
 
@@ -40,6 +42,7 @@ public:
 		"ATTACK",
 		"FLINCH",
 		"BLOW",
+		"BLOW_AWAY",
 	};
 
 	// コンストラクタ
@@ -77,6 +80,9 @@ private:
 	// アニメーションの初期化
 	void InitAnimation(void);
 
+	// アニメーション移動地無効化
+	void DisableAnimMovePow(void);
+
 	// アニメーション遷移用
 	STATE state_;
 	STATE preState_;
@@ -95,6 +101,7 @@ private:
 	void ChangeAttack(void);
 	void ChangeFlinch(void);
 	void ChangeBlow(void);
+	void ChangeBlowAway(void);
 
 	// 更新
 	std::function<void(void)> stateUpdate_;
@@ -103,12 +110,16 @@ private:
 	void UpdateAttack(void);
 	void UpdateFlinch(void);
 	void UpdateBlow(void);
+	void UpdateBlowAway(void);
 
 	// 回転の差分
 	VECTOR diff_;
 	
 	// クォータニオン回転
 	Quaternion rot_;
+
+	// ブレンド用フレーム番号
+	int frameNo_;
 
 	// 回転の内積
 	float dot_;

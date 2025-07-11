@@ -6,6 +6,7 @@
 #include "../../Controller/AnimationController.h"
 #include "../../Utility/Utility.h"
 #include "../../Object/Weapon.h"
+#include "../../Object/Unit/NormalEnemy.h"
 #include "Player.h"
 
 // モデルのHips
@@ -190,12 +191,11 @@ void Player::ProcessInput(void)
 	}
 
 	// 受付フレーム以内に同時押しでSMASH発動
-	if (backInputFrame_ > 0 && backInputFrame_ <= 10) 
+	if (backInputFrame_ > 0 && backInputFrame_ <= 15) 
 	{
 		if (ins.IsPressed(InputManager::ACTION::MOVE_FORWARD) &&
 			ins.IsPressed(InputManager::ACTION::ATTACK))
 		{
-			rotRad_ = static_cast<float>(Utility::Deg2RadD(0.0f));
 			animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::SMASH]);
 			currentAnimType_ = ANIM_TYPE::SMASH;
 			isAttack_ = true;

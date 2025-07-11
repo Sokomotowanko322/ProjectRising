@@ -5,6 +5,7 @@
 #include "../Utility/Utility.h"
 #include "../Common/Fader.h"
 #include "../Object/SkyDome.h"
+#include "../Object/Stage.h"
 #include "../Object/Unit/Player.h"
 #include "../Object/Unit/NormalEnemy.h"
 #include "../Object/Weapon.h"
@@ -40,6 +41,10 @@ void GameScene::Init(void)
 	// --- ここで一度WeaponのmodelIdを確認 ---
 	printfDx("Player modelId after Init: %d\n", player_->GetTransform().modelId);
 
+	// ステージ
+	stage_ = std::make_shared<Stage>();
+	stage_->Init();
+	
 	// スカイドーム
 	skyDome_ = std::make_unique<SkyDome>(player_->GetTransform());
 	skyDome_->Init();
@@ -54,9 +59,6 @@ void GameScene::Init(void)
 
 void GameScene::AddColliders(void)
 {
-	printfDx("AddCollider: weapon modelId=%d, ownerID_=%d\n",
-		player_->GetWeapon()->GetWeaponTransform().modelId);
-
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
 		player_->GetPos(),
@@ -101,10 +103,7 @@ void GameScene::AddColliders(void)
 	VECTOR center = VScale(VAdd(tipWorld, baseWorld), 0.5f);
 	VECTOR dir = VNorm(VSub(tipWorld, baseWorld));
 	float height = VSize(VSub(tipWorld, baseWorld));
-	printfDx("player modelId=%d, weapon modelId=%d, enemy modelId=%d\n",
-		player_->GetTransform().modelId,
-		player_->GetWeapon()->GetWeaponTransform().modelId,
-		normalEnemy_->GetTransform().modelId);
+
 	// コライダ追加
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
@@ -114,6 +113,16 @@ void GameScene::AddColliders(void)
 		2.0f, // 半径は適宜
 		player_->GetWeapon()->GetWeaponTransform().modelId,
 		true // トリガー
+	));
+	// コライダ追加
+	colMng_->AddCollider(ColliderData(
+		ColliderType::StageTransform,
+		stage_->GetPos(),
+		{ 0.0f,5.0f,0.0f },
+		20.0f,
+		5.0f,
+		stage_->GetTransform().modelId,
+		false // トリガー
 	));
 }
 
@@ -126,7 +135,10 @@ void GameScene::Update(void)
 
 	// 背景追従
 	skyDome_->Update();
-	//945029137
+	
+	// ステージ更新
+	stage_->Update();
+	
 	// プレイヤーの更新
 	player_->Update();
 
@@ -141,6 +153,9 @@ void GameScene::Draw(void)
 {
 	// skydomeの描画
 	skyDome_->Draw();
+	
+	// ステージの描画
+	stage_->Draw();
 
 	// プレイヤー描画
 	player_->Draw();

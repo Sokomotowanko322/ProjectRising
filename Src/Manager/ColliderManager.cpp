@@ -8,9 +8,9 @@
 // プレイヤー攻撃アニメ種別→敵のリアクション
 static const std::unordered_map<Player::ANIM_TYPE, std::function<void(NormalEnemy*, const VECTOR&)>> reactionTable_ = 
 {
-    { Player::ANIM_TYPE::SMASH,      [](NormalEnemy* e, const VECTOR& dir) { e->ChangeState(NormalEnemy::STATE::FLINCH); } },
+    { Player::ANIM_TYPE::SMASH,      [](NormalEnemy* e, const VECTOR& dir) { e->ChangeState(NormalEnemy::STATE::BLOW_AWAY); } },
     { Player::ANIM_TYPE::FIRST_COMBO,[](NormalEnemy* e, const VECTOR& dir) { e->ChangeState(NormalEnemy::STATE::FLINCH); } },
-    { Player::ANIM_TYPE::HIGHTIME,   [](NormalEnemy* e, const VECTOR& dir) { e->ChangeState(NormalEnemy::STATE::FLINCH); } },
+    { Player::ANIM_TYPE::HIGHTIME,   [](NormalEnemy* e, const VECTOR& dir) { e->ChangeState(NormalEnemy::STATE::BLOW); } },
 };
 
 void ColliderManager::RegisterActor(const std::shared_ptr<ActorBase>& actor)
@@ -23,10 +23,6 @@ void ColliderManager::DrawColliders()
     int idx = 0;
     for (const auto& col : colliders_)
     {
-        /*printfDx("Collider[%d]: type=%d, ownerID=%d, pos=(%.2f, %.2f, %.2f)\n",
-            idx, (int)col.type_, col.ownerID_, col.pos_.x, col.pos_.y, col.pos_.z);*/
-        //++idx;
-
         if (col.type_ == ColliderType::Capsule)
         {
             // カプセルの中心col.pos_、方向col.dir_、高さcol.height_、半径col.radius_の場合
@@ -42,14 +38,6 @@ void ColliderManager::DrawColliders()
                 FALSE                      // ワイヤーフレーム
             );
         }
-        //else if (col.type_ == ColliderType::StageTransform)
-        //{
-        //    // ボックス（AABB）描画例
-        //    VECTOR min = VSub(col.pos_, VScale(col.dir_, 0.5f));
-        //    VECTOR max = VAdd(col.pos_, VScale(col.dir_, 0.5f));
-        //    DrawBox(max.x, max.y, max.z,GetColor(0, 255, 0),true,1);
-        //}
-        //// 必要に応じて他のタイプも追加
     }
 }
 

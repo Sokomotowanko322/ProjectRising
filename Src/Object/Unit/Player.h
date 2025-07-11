@@ -2,6 +2,7 @@
 
 class AnimationController;
 class Weapon; 
+class NormalEnemy; 
 
 class Player : public ActorBase//, public ColliderBase
 {
@@ -75,6 +76,9 @@ private:
 
 	// 武器(主にプレイヤー用として機能させる)
 	std::shared_ptr<Weapon> weapon_;
+	
+	// 敵
+	std::weak_ptr<NormalEnemy> normalEnemy_;
 
 	// アニメーションタイプ
 	ANIM_TYPE currentAnimType_;

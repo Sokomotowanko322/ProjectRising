@@ -3,6 +3,7 @@
 
 class ColliderManager;
 class SkyDome;
+class Stage;
 class Player;
 class NormalEnemy;
 
@@ -41,10 +42,9 @@ private:
 	// スカイドーム
 	std::unique_ptr<SkyDome> skyDome_;
 	
-	//// 敵
-	//std::shared_ptr<Enemy> enemy_;
-	//// ステージ
-	//std::shared_ptr<Stage> stage_;
+	// ステージ
+	std::shared_ptr<Stage> stage_;
+
 	// 衝突判定
 	std::unique_ptr<ColliderManager> colMng_;
 

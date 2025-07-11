@@ -7,6 +7,8 @@
 #include "../../Object/Unit/Player.h"
 #include "NormalEnemy.h"
 
+// モデルのHips
+char FRAME_ENEMY_HIPS[] = "mixamorig:Hips";
 
 const char PATH_NORMALENEMY[] = "Enemy/Anim";
 const VECTOR ENEMY_MODEL_SCALE = { 0.5f,0.5f,0.5f };
@@ -29,13 +31,15 @@ const float LONG_RANGE = 300.0f;
 NormalEnemy::NormalEnemy(std::weak_ptr<Player> player) : ActorBase(),
 animationController_(std::make_unique<AnimationController>(transform_.modelId)),
 diff_(Utility::VECTOR_ZERO),
-rotationStep_(0.0f)
+rotationStep_(0.0f),frameNo_(-1)
 {
 	player_ = player;
 	stateChange_[STATE::IDLE] = std::bind(&NormalEnemy::ChangeIdle, this);
 	stateChange_[STATE::WALK] = std::bind(&NormalEnemy::ChangeClose, this);
 	stateChange_[STATE::ATTACK] = std::bind(&NormalEnemy::ChangeAttack, this);
 	stateChange_[STATE::FLINCH] = std::bind(&NormalEnemy::ChangeFlinch, this);
+	stateChange_[STATE::BLOW] = std::bind(&NormalEnemy::ChangeBlow, this);
+	stateChange_[STATE::BLOW_AWAY] = std::bind(&NormalEnemy::ChangeBlowAway, this);
 }
 
 NormalEnemy::~NormalEnemy()
@@ -55,6 +59,8 @@ void NormalEnemy::Init(void)
 
 	// アニメーションの初期化
 	InitAnimation();
+
+	frameNo_ = MV1SearchFrame(transform_.modelId, FRAME_ENEMY_HIPS);
 
 	ChangeState(STATE::IDLE);
 }
@@ -119,9 +125,41 @@ void NormalEnemy::InitAnimation(void)
 	// 移動アニメーション
 	animationController_->Add("WALK", path + "Walk.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::NORMAL_ENEMY_WALK), false, 0, false);
+	
 	// 通常ダメージアニメーション
 	animationController_->Add("FLINCH", path + "Flinch.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::ENEMY_FLINCH), false, 0, false);
+	
+	// 打ち上げダメージアニメーション
+	animationController_->Add("BLOW", path + "Blow.mv1",
+		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::ENEMY_BLOW), false, 0, false);
+	
+	// 吹き飛ばしダメージアニメーション
+	animationController_->Add("BLOW_AWAY", path + "BlowAway.mv1",
+		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::ENEMY_BLOW_AWAY), false, 0, false);
+}
+
+void NormalEnemy::DisableAnimMovePow(void)
+{
+	// 対象フレームのローカル行列を初期値にリセット
+	MV1ResetFrameUserLocalMatrix(transform_.modelId, frameNo_);
+
+	// 対象フレームのローカル行列(大きさ、回転、位置)を取得
+	auto mat = MV1GetFrameLocalMatrix(transform_.modelId, frameNo_);
+	auto mScl = MGetSize(mat);
+	auto mRot = MGetRotElem(mat);
+	auto mPos = MGetTranslateElem(mat);
+
+	// 大きさ、回転、位置をローカル座標に戻す
+	MATRIX mix = MGetIdent();
+	mix = MMult(mix, MGetScale(mScl));	// 大きさ
+	mix = MMult(mix, mRot);				// 回転
+
+	// 調整したローカル座標を行列に設定
+	mix = MMult(mix, MGetTranslate({ 0.0f,79.0f,0.0f }));
+
+	// 移動値を無効化
+	MV1SetFrameUserLocalMatrix(transform_.modelId, frameNo_, mix);
 }
 
 void NormalEnemy::ChangeIdle(void)
@@ -146,7 +184,26 @@ void NormalEnemy::ChangeFlinch(void)
 
 void NormalEnemy::ChangeBlow(void)
 {
+	// 上昇処理
+	DisableAnimMovePow();
+	transform_.pos.y += 1.0f; // 上昇量は調整してください
 	stateUpdate_ = std::bind(&NormalEnemy::UpdateBlow, this);
+}
+
+void NormalEnemy::ChangeBlowAway(void)
+{
+	// 吹き飛ばし方向（モデルの背後方向）を取得
+	VECTOR back = transform_.GetBack();
+
+	// 吹き飛ばし速度
+	float blowSpeed = 1.0f;
+
+	// 背後方向に移動
+	transform_.pos.x += back.x * blowSpeed;
+	transform_.pos.y += back.y * blowSpeed;
+	transform_.pos.z += back.z * blowSpeed;
+
+	stateUpdate_ = std::bind(&NormalEnemy::UpdateBlowAway, this);
 }
 
 void NormalEnemy::UpdateIdle(void)
@@ -236,9 +293,21 @@ void NormalEnemy::UpdateFlinch(void)
 
 void NormalEnemy::UpdateBlow(void)
 {
-	if (animationController_->IsEndPlayAnimation() && transform_.pos.y == 0.0f)
+	// 少しずつ下におろしていく
+	if (transform_.pos.y >= 0.0f)
 	{
-		// アニメーションが終わったらIDLEに戻る
+		transform_.pos.y -= 0.1f;
+	}
+
+	if (transform_.pos.y <= 0.0f)
+	{
+		transform_.pos.y = 0.0f;
+		// アニメーションが終わったらIDLEに戻し、アニメーションの移動値を元に戻す
+		MV1ResetFrameUserLocalMatrix(transform_.modelId, frameNo_);
 		ChangeState(STATE::IDLE);
 	}
+}
+
+void NormalEnemy::UpdateBlowAway(void)
+{
 }
