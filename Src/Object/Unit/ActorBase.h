@@ -19,7 +19,9 @@ public:
     virtual void Draw(void) = 0;
     virtual void Damage(int amount);
 
-   
+    // 共通重力処理
+    virtual void CalculateGravity();
+
 	// 取得系
     const Transform& GetTransform(void) const;
     virtual VECTOR GetPos() const = 0; // 純粋仮想関数
@@ -46,6 +48,9 @@ protected:
     // 位置
     VECTOR position_;
 
+    // 速度ベクトル
+    VECTOR velocity_;
+
     // 体力
     int hp_;
 
@@ -59,6 +64,9 @@ protected:
 
     // 無敵フラグ
 	bool isInvincible_;
+
+	// 接地フラグ
+	bool isGrounded_;
 
 #pragma endregion 
 

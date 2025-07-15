@@ -66,6 +66,11 @@ public:
 
 	// 位置の取得
 	VECTOR GetPos() const override;
+
+	// 中心座標の取得
+	VECTOR GetCenterPos() const;
+	
+	// 位置の設定
 	void SetPos(const VECTOR& pos)override;
 
 protected:
@@ -114,12 +119,18 @@ private:
 
 	// 回転の差分
 	VECTOR diff_;
-	
+
+	// 腰の位置
+	VECTOR waistPos_;
+
 	// クォータニオン回転
 	Quaternion rot_;
 
 	// ブレンド用フレーム番号
 	int frameNo_;
+
+	// 腰まわりのフレーム
+	int waistFrame_;
 
 	// 回転の内積
 	float dot_;

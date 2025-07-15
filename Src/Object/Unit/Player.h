@@ -62,13 +62,18 @@ public:
 	ANIM_TYPE GetCurrentAnimType() const;
 	const VECTOR& GetRightHandPos() const;
 	VECTOR GetPos() const override;
+	VECTOR GetCenterPos() const;
 
 	// プレイヤーの位置をコライダと合わせる
 	void SetPos(const VECTOR& pos)override;
 
 	// 攻撃状態かどうか
 	bool IsAttack() const;
-	
+
+	// コライダ側で代入できるようにする
+	bool isGrounded_;
+
+
 private:
 
 	// アニメーション
@@ -86,11 +91,17 @@ private:
 	// 右手の座標
 	VECTOR rightHandPos_;
 
+	// モデル衝突判定用の腰の位置
+	VECTOR waistPos_;
+
 	// 移動方向
 	VECTOR moveDir_;
 
 	// プレイヤーの移動量
 	VECTOR movePow_;
+
+	// 腰まわりのフレーム
+	int waistFrame_;
 
 	// 右手のフレーム
 	int rightHandFrame_;
@@ -121,7 +132,7 @@ private:
 
 	// フラグ管理
 	bool isAttack_;
-
+	
 	// アニメーションの初期化
 	void InitAnimation(void);
 	
@@ -134,4 +145,7 @@ private:
 	// 回転
 	void SetGoalRotate(double rotRad);
 	void Rotate(void);
+
+	// 重力を計算
+	void CalculateGravity(void);
 };

@@ -1,11 +1,12 @@
 #include "../../Manager/SceneManager.h"
 #include "../../Manager/ResourceManager.h"
+#include "../../Utility/Utility.h"
 #include "ActorBase.h"
 
 ActorBase::ActorBase():
 	scnMng_(SceneManager::GetInstance()),
     resMng_(ResourceManager::GetInstance()),
-    position_(transform_.pos), 
+    position_(transform_.pos), velocity_(Utility::VECTOR_ZERO),
 	hp_(100), isInvincible_(false),
     transform_(-1),isAlive_(true)
 {
@@ -38,6 +39,20 @@ void ActorBase::Damage(int damageAmount)
         isAlive_ = false;
     }
    
+}
+
+void ActorBase::CalculateGravity()
+{
+    constexpr float GRAVITY = -0.01f;
+    if (!isGrounded_) {
+        velocity_.y += GRAVITY;
+    }
+    else {
+        velocity_.y = 0.0f;
+    }
+    VECTOR pos = GetPos();
+    pos.y += velocity_.y;
+    SetPos(pos);
 }
 
 int ActorBase::GetHP() const 

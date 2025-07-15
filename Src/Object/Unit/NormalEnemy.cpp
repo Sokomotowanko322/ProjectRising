@@ -50,7 +50,7 @@ void NormalEnemy::Init(void)
 {
 	transform_.modelId = resMng_.LoadModelDuplicate(ResourceManager::SRC::NORMAL_ENEMY);
 	transform_.scl = ENEMY_MODEL_SCALE;
-	transform_.pos = { 0.0f, 0.0f, 0.0f };
+	transform_.pos = { 100.0f, 0.0f, 0.0f };
 	transform_.quaRot = Quaternion::Euler(
 		0.0f,
 		Utility::Deg2RadF(180.0f),
@@ -60,8 +60,13 @@ void NormalEnemy::Init(void)
 	// アニメーションの初期化
 	InitAnimation();
 
+	// 腰のフレーム
+	waistFrame_ = MV1SearchFrame(transform_.modelId, "mixamorig:Head");
+
+	// モーション値無効化のため取得
 	frameNo_ = MV1SearchFrame(transform_.modelId, FRAME_ENEMY_HIPS);
 
+	// 初期状態をIDLEに設定
 	ChangeState(STATE::IDLE);
 }
 
@@ -72,6 +77,8 @@ void NormalEnemy::Update(void)
 
 	// アニメーションの更新
 	animationController_->Update();
+
+	waistPos_ = MV1GetFramePosition(transform_.modelId, waistFrame_);
 
 	// モデルの更新
 	transform_.Update();
@@ -106,6 +113,11 @@ void NormalEnemy::ChangeState(STATE state)
 VECTOR NormalEnemy::GetPos() const
 {
 	return transform_.pos;
+}
+
+VECTOR NormalEnemy::GetCenterPos() const
+{
+	return waistPos_;
 }
 
 void NormalEnemy::SetPos(const VECTOR& pos)

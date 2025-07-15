@@ -61,10 +61,10 @@ void GameScene::AddColliders(void)
 {
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
-		player_->GetPos(),
-		{ 0.0f,5.0f,0.0f },
-		20.0f,
-		5.0f,
+		player_->GetCenterPos(), // ˜À•W
+		VGet(0, 1, 0),           // ã•ûŒü
+		90.0f,                   // ’·‚³
+		5.0f,                    // ”¼Œa
 		player_->GetTransform().modelId,
 		false	// ŠÑ’Ê‚µ‚È‚¢
 	));
@@ -80,7 +80,7 @@ void GameScene::AddColliders(void)
 	));
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
-		normalEnemy_->GetPos(),
+		normalEnemy_->GetCenterPos(),
 		{0.0f,5.0f,0.0f},
 		20.0f,
 		5.0f,
@@ -118,7 +118,7 @@ void GameScene::AddColliders(void)
 	colMng_->AddCollider(ColliderData(
 		ColliderType::StageTransform,
 		stage_->GetPos(),
-		{ 0.0f,5.0f,0.0f },
+		VGet(0,1,0),
 		20.0f,
 		5.0f,
 		stage_->GetTransform().modelId,

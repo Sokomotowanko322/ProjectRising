@@ -55,17 +55,17 @@ void ColliderManager::Update()
             UpdateColliders();
             CheckCollisions();
 
-            // --- ここでコライダーの位置をアクター本体に反映 ---
-            for (auto& col : colliders_)
-            {
-                // 右手コライダーは除外
-                if (col.type_ == ColliderType::Capsule &&
-                    col.ownerID_ == actor->GetTransform().modelId &&
-                    !col.isRightHand_)
-                {
-                    actor->SetPos(col.pos_);
-                }
-            }
+            //// --- ここでコライダーの位置をアクター本体に反映 ---
+            //for (auto& col : colliders_)
+            //{
+            //    // 右手コライダーは除外
+            //    if (col.type_ == ColliderType::Capsule &&
+            //        col.ownerID_ == actor->GetTransform().modelId &&
+            //        !col.isRightHand_)
+            //    {
+            //        actor->SetPos(col.pos_);
+            //    }
+            //}
             ++i;
         }
         else
@@ -112,7 +112,7 @@ void ColliderManager::UpdateColliders()
         {
             if (col.type_ != ColliderType::Capsule) continue;
 
-            // --- 武器コライダの完全追従例 ---
+            // 武器コライダの完全追従
             if (weapon && col.ownerID_ == weapon->GetWeaponTransform().modelId) {
                 const Transform& trans = weapon->GetWeaponTransform();
                 VECTOR scl = trans.scl;
@@ -147,14 +147,21 @@ void ColliderManager::UpdateColliders()
                 col.pos_ = player->GetRightHandPos();
                 continue;
             }
-            // 3. プレイヤー本体コライダー
+            // プレイヤー本体コライダー
             if (player && !col.isRightHand_ && col.ownerID_ == player->GetTransform().modelId) {
-                col.pos_ = player->GetPos();
+                // モデル原点＋Yオフセット
+                constexpr float PLAYER_WAIST_OFFSET_Y = 50.0f; // 実際のモデルに合わせて調整
+                VECTOR pos = player->GetPos();
+                pos.y += PLAYER_WAIST_OFFSET_Y;
+                col.pos_ = pos;
                 continue;
             }
-            // 4. 敵本体コライダー
+            // 敵本体コライダー
             if (enemy && col.ownerID_ == enemy->GetTransform().modelId) {
-                col.pos_ = enemy->GetPos();
+                constexpr float ENEMY_WAIST_OFFSET_Y = 50.0f; // 敵モデルに合わせて調整
+                VECTOR pos = enemy->GetPos();
+                pos.y += ENEMY_WAIST_OFFSET_Y;
+                col.pos_ = pos;
                 continue;
             }
         }
@@ -231,15 +238,68 @@ void ColliderManager::CheckCollisions() {
 
             // ステージとの衝突
             if (a.type_ == ColliderType::Capsule && b.type_ == ColliderType::StageTransform) {
-                ResolveStageCollision(a, b);
+                CheckStageMeshCollision(a, b.ownerID_); 
                 continue;
             }
             if (b.type_ == ColliderType::Capsule && a.type_ == ColliderType::StageTransform) {
-                ResolveStageCollision(b, a);
+                CheckStageMeshCollision(b, a.ownerID_); 
                 continue;
             }
         }
     }
+}
+
+void ColliderManager::CheckStageMeshCollision(ColliderData& capsuleCol, int stageModelId)
+{
+    // カプセルの端点を計算
+    VECTOR capStart = VAdd(capsuleCol.pos_, VScale(capsuleCol.dir_, -capsuleCol.length_ * 0.5f));
+    VECTOR capEnd = VAdd(capsuleCol.pos_, VScale(capsuleCol.dir_, capsuleCol.length_ * 0.5f));
+
+    MV1_COLL_RESULT_POLY_DIM hits = MV1CollCheck_Capsule(
+        stageModelId, -1,
+        capStart, capEnd, capsuleCol.radius_
+    );
+
+    constexpr int PUSH_TRY_COUNT = 10;
+    constexpr float PUSH_FORCE = 0.1f;
+
+    VECTOR totalDelta = VGet(0, 0, 0);
+
+    for (int i = 0; i < hits.HitNum; ++i) {
+        const auto& hit = hits.Dim[i];
+
+        for (int tryCnt = 0; tryCnt < PUSH_TRY_COUNT; ++tryCnt) {
+            VECTOR oldPos = capsuleCol.pos_;
+            capsuleCol.pos_ = VAdd(capsuleCol.pos_, VScale(hit.Normal, PUSH_FORCE));
+            VECTOR delta = VSub(capsuleCol.pos_, oldPos);
+            totalDelta = VAdd(totalDelta, delta);
+        }
+        // Y成分が大きい場合は接地判定
+        if (hit.Normal.y > 0.7f) {
+            for (auto& weakActor : actors_) {
+                if (auto player = dynamic_cast<Player*>(weakActor.lock().get())) {
+                    if (player->GetTransform().modelId == capsuleCol.ownerID_) {
+                        player->isGrounded_ = true;
+                    }
+                }
+            }
+        }
+    }
+
+    // コライダーのownerIDと一致するアクター本体も同じだけ移動
+    if (totalDelta.x != 0.0f || totalDelta.y != 0.0f || totalDelta.z != 0.0f) {
+        for (auto& weakActor : actors_) {
+            if (auto actor = weakActor.lock()) {
+                if (actor->GetTransform().modelId == capsuleCol.ownerID_) {
+                    VECTOR pos = actor->GetPos();
+                    pos = VAdd(pos, totalDelta);
+                    actor->SetPos(pos);
+                }
+            }
+        }
+    }
+
+    MV1CollResultPolyDimTerminate(hits);
 }
 
 Player* ColliderManager::FindPlayerByWeapon(Weapon* weapon)
@@ -291,26 +351,44 @@ void ColliderManager::ResolveStageCollision(ColliderData& mover, const ColliderD
 
 void ColliderManager::ResolveCapsuleCollision(ColliderData& a, ColliderData& b)
 {
-    // 2つのカプセルの中心座標の差分ベクトル（法線）
     VECTOR dir = VSub(a.pos_, b.pos_);
     float dist = VSize(dir);
-
-    // 半径の合計
     float rSum = a.radius_ + b.radius_;
-
-    // めり込み量を計算
     float penetration = rSum - dist;
 
     if (penetration > 0.0f && dist > 1e-4f) {
-        // 法線を正規化
         VECTOR normal = VNorm(dir);
-
-        // 少しだけ余裕を持たせて押し出す
         float pushBack = penetration + 0.05f;
 
-        // 両者を均等に押し出す
-        a.pos_ = VAdd(a.pos_, VScale(normal, pushBack * 20.0f));
-        b.pos_ = VAdd(b.pos_, VScale(normal, -pushBack * 20.0f));
+        // 押し出し前の位置を保存
+        VECTOR oldA = a.pos_;
+        VECTOR oldB = b.pos_;
+
+        // コライダーを押し出す
+        a.pos_ = VAdd(a.pos_, VScale(normal, pushBack * 1.0f));
+        b.pos_ = VAdd(b.pos_, VScale(normal, -pushBack * 1.0f));
+
+        // 押し出し量を計算
+        VECTOR deltaA = VSub(a.pos_, oldA);
+        VECTOR deltaB = VSub(b.pos_, oldB);
+
+        // アクター本体も同じだけ移動させる
+        for (auto& weakActor : actors_) {
+            if (auto actor = weakActor.lock()) {
+                // a側
+                if (actor->GetTransform().modelId == a.ownerID_) {
+                    VECTOR pos = actor->GetPos();
+                    pos = VAdd(pos, deltaA);
+                    actor->SetPos(pos);
+                }
+                // b側
+                if (actor->GetTransform().modelId == b.ownerID_) {
+                    VECTOR pos = actor->GetPos();
+                    pos = VAdd(pos, deltaB);
+                    actor->SetPos(pos);
+                }
+            }
+        }
     }
 }
 

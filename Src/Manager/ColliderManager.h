@@ -41,6 +41,9 @@ private:
 	
     // 当たり判定をチェック
     void CheckCollisions();
+
+    // ステージ用当たり判定チェック関数
+    void CheckStageMeshCollision(ColliderData& capsuleCol, int stageModelId);
     
     Player* FindPlayerByWeapon(Weapon* weapon);
 

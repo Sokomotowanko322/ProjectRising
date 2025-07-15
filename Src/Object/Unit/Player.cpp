@@ -88,6 +88,12 @@ void Player::Init(void)
    // 武器の初期化
    weapon_->Init();
 
+   // ステージとの判定用に中心を取得
+   waistFrame_ = MV1SearchFrame(transform_.modelId, "mixamorig:Head");
+   
+   // 腰のフレーム位置を取得
+   waistPos_ = MV1GetFramePosition(transform_.modelId, waistFrame_);
+
    // 武器追従のためフレームを取得
    rightHandFrame_ = MV1SearchFrame(transform_.modelId, "mixamorig:RightHandMiddle1");
 
@@ -113,8 +119,17 @@ void Player::Update(void)
 	// アニメーションの更新
 	animationController_->Update();
 	
+	// 腰のフレーム位置を取得し続ける
+	waistPos_ = MV1GetFramePosition(transform_.modelId, waistFrame_);
+	
 	// 左手のフレーム位置を取得し続ける
 	rightHandPos_ = MV1GetFramePosition(transform_.modelId, rightHandFrame_);
+
+	if(!isGrounded_)
+	{
+		// 重力をかける
+		CalculateGravity();
+	}
 
     // 移動量の初期化
     moveDir_ = Utility::VECTOR_ZERO;
@@ -327,6 +342,11 @@ VECTOR Player::GetPos() const
 	return transform_.pos;
 }
 
+VECTOR Player::GetCenterPos() const
+{
+	return waistPos_;
+}
+
 const VECTOR& Player::GetRightHandPos() const
 {
 	return rightHandPos_;
@@ -474,4 +494,18 @@ void Player::Rotate(void)
     // 回転の球面補間
     playerRotY_ = Quaternion::Slerp(
         playerRotY_, goalQuaRot_, (TIME_ROT - stepRotTime_) / TIME_ROT);
+}
+
+void Player::CalculateGravity(void)
+{
+	// 例: Player/NormalEnemyのUpdate()内
+	constexpr float GRAVITY = -0.01f; // 重力加速度（調整可）
+
+	// 空中なら重力を加算
+	velocity_.y += GRAVITY;
+
+	// 速度を位置に反映
+	VECTOR pos = transform_.pos;
+	pos.y += velocity_.y;
+	SetPos(pos);
 }
