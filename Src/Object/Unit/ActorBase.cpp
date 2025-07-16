@@ -43,7 +43,7 @@ void ActorBase::Damage(int damageAmount)
 
 void ActorBase::CalculateGravity()
 {
-    constexpr float GRAVITY = -0.01f;
+    constexpr float GRAVITY = 0.01f;
     if (!isGrounded_) {
         velocity_.y += GRAVITY;
     }
@@ -51,7 +51,7 @@ void ActorBase::CalculateGravity()
         velocity_.y = 0.0f;
     }
     VECTOR pos = GetPos();
-    pos.y += velocity_.y;
+    pos.y -= velocity_.y;
     SetPos(pos);
 }
 

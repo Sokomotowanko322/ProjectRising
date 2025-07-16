@@ -164,7 +164,7 @@ void GameScene::Draw(void)
 	normalEnemy_->Draw();
 
 	// コライダーの描画
-	colMng_->DrawColliders();
+	//colMng_->DrawColliders();
 
 	// テスト用で左上に緑の四角を描画
 	DrawBox(0, 0, 500, 50, GetColor(0, 255, 0), TRUE);

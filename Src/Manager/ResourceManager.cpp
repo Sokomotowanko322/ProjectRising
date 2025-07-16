@@ -99,6 +99,10 @@ void ResourceManager::Init(void)
 	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Player/Anim/Dash.mv1");
 	resourcesMap_.emplace(SRC::PLAYER_DASH, std::move(res));
 	
+	// âÒî	
+	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Player/Anim/Dodge.mv1");
+	resourcesMap_.emplace(SRC::PLAYER_DODGE, std::move(res));
+	
 	// çUåÇ
 	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Player/Anim/HighTime.mv1");
 	resourcesMap_.emplace(SRC::PLAYER_HIGH_TIME, std::move(res));
@@ -123,8 +127,8 @@ void ResourceManager::Init(void)
 	resourcesMap_.emplace(SRC::NORMAL_ENEMY_WALK, std::move(res));
 
 	// çUåÇån
-	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Enemy/NormalEnemyAnim/NormalAttack.mv1");
-	resourcesMap_.emplace(SRC::NORMAL_ENEMY_NORMALATTACK, std::move(res));
+	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Enemy/Anim/Attack.mv1");
+	resourcesMap_.emplace(SRC::ENEMY_ATTACK, std::move(res));
 
 	// éÄñSÇ‚É_ÉÅÅ[ÉW
 	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Enemy/Anim/Flinch.mv1");

@@ -27,6 +27,12 @@ public:
     virtual VECTOR GetPos() const = 0; // 純粋仮想関数
     virtual void SetPos(const VECTOR& pos) = 0; // 純粋仮想関数
     int GetHP() const;
+    // ...既存...
+    // アクセサ追加
+    const VECTOR& GetVelocity() const { return velocity_; }
+    void SetVelocity(const VECTOR& v) { velocity_ = v; }
+    void AddVelocity(const VECTOR& v) { velocity_.x += v.x; velocity_.y += v.y; velocity_.z += v.z; }
+    void ZeroVelocity() { velocity_ = VGet(0, 0, 0); }
 
 	// 設定系
     int SetHP(int hp);

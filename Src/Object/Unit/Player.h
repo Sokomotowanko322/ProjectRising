@@ -4,7 +4,7 @@ class AnimationController;
 class Weapon; 
 class NormalEnemy; 
 
-class Player : public ActorBase//, public ColliderBase
+class Player : public ActorBase
 {
 public:
 
@@ -55,6 +55,7 @@ public:
 
 	// 操作
 	void ProcessInput(void);
+	void Dodge(void);
 	void MoveControl(void);
 
 	// 取得系
@@ -63,6 +64,9 @@ public:
 	const VECTOR& GetRightHandPos() const;
 	VECTOR GetPos() const override;
 	VECTOR GetCenterPos() const;
+
+	// ヒット時のエフェクト
+	void HitEffect(VECTOR pos);
 
 	// プレイヤーの位置をコライダと合わせる
 	void SetPos(const VECTOR& pos)override;
@@ -124,6 +128,10 @@ private:
 	// プレイヤーの移動速度
 	float moveSpeed_;
 
+	// エフェクトの再生用
+	int hitEfResId_;
+	int hitEfPlayId_;
+
 	// 回転
 	Quaternion playerRotY_;
 	Quaternion goalQuaRot_;
@@ -132,6 +140,7 @@ private:
 
 	// フラグ管理
 	bool isAttack_;
+	bool isInvincible_;
 	
 	// アニメーションの初期化
 	void InitAnimation(void);
@@ -145,7 +154,4 @@ private:
 	// 回転
 	void SetGoalRotate(double rotRad);
 	void Rotate(void);
-
-	// 重力を計算
-	void CalculateGravity(void);
 };

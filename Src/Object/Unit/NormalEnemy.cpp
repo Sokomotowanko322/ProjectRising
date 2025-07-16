@@ -1,6 +1,7 @@
 #include <EffekseerForDXLib.h>
 #include <DxLib.h>
 #include "../../Application.h"
+#include "../../Manager/SceneManager.h"
 #include "../../Manager/ResourceManager.h"
 #include "../../Controller/AnimationController.h"
 #include "../../Utility/Utility.h"
@@ -26,7 +27,7 @@ const float DOT_MIN = 0.99f;
 const float DEVIDE_STEPCOUNT = 8.0f;
 
 // 遠距離判定用
-const float LONG_RANGE = 300.0f;
+const float LONG_RANGE = 70.0f;
 
 NormalEnemy::NormalEnemy(std::weak_ptr<Player> player) : ActorBase(),
 animationController_(std::make_unique<AnimationController>(transform_.modelId)),
@@ -53,7 +54,7 @@ void NormalEnemy::Init(void)
 	transform_.pos = { 100.0f, 0.0f, 0.0f };
 	transform_.quaRot = Quaternion::Euler(
 		0.0f,
-		Utility::Deg2RadF(180.0f),
+		0.0f,
 		0.0f
 	);
 
@@ -65,6 +66,10 @@ void NormalEnemy::Init(void)
 
 	// モーション値無効化のため取得
 	frameNo_ = MV1SearchFrame(transform_.modelId, FRAME_ENEMY_HIPS);
+
+	// カウント初期化
+	cntDelay_ = 2.0f;
+	attackDelay_ = 2.0f;
 
 	// 初期状態をIDLEに設定
 	ChangeState(STATE::IDLE);
@@ -80,9 +85,12 @@ void NormalEnemy::Update(void)
 
 	waistPos_ = MV1GetFramePosition(transform_.modelId, waistFrame_);
 
+	// 重力をかける
+	/*isGrounded_ = false;
+	CalculateGravity();*/
+
 	// モデルの更新
 	transform_.Update();
-
 }
 
 void NormalEnemy::Draw(void)
@@ -138,15 +146,17 @@ void NormalEnemy::InitAnimation(void)
 	animationController_->Add("WALK", path + "Walk.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::NORMAL_ENEMY_WALK), false, 0, false);
 	
+	// 攻撃アニメーション
+	animationController_->Add("ATTACK", path + "Attack.mv1",
+		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::ENEMY_ATTACK), false, 0, false);
+
 	// 通常ダメージアニメーション
 	animationController_->Add("FLINCH", path + "Flinch.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::ENEMY_FLINCH), false, 0, false);
-	
 	// 打ち上げダメージアニメーション
 	animationController_->Add("BLOW", path + "Blow.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::ENEMY_BLOW), false, 0, false);
-	
-	// 吹き飛ばしダメージアニメーション
+	// 吹き飛びダメージアニメーション
 	animationController_->Add("BLOW_AWAY", path + "BlowAway.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::ENEMY_BLOW_AWAY), false, 0, false);
 }
@@ -222,6 +232,7 @@ void NormalEnemy::UpdateIdle(void)
 {
 	// 回転
 	rotationStep_ += ROTATION_MIN;
+	attackDelay_ += SceneManager::GetInstance().GetDeltaTime();
 
 	// プレイヤーの座標を取得
 	VECTOR pPos = player_.lock()->GetPos();
@@ -263,35 +274,65 @@ void NormalEnemy::UpdateIdle(void)
 
 	float length = Utility::MagnitudeF(vec);
 
-	// プレイヤーに近ければ攻撃、離れていれば近づける
+	if (attackDelay_ >= cntDelay_)
+	{
+		attackDelay_ = 0.0f;
+		rotationStep_ = 0.0f;
+	}
+
+	// プレイヤーに近づける
 	if (distance >= LONG_RANGE * LONG_RANGE)
 	{
 		ChangeClose();
 	}
-
 }
 
 void NormalEnemy::UpdateClose(void)
 {
-
 	// プレイヤーの座標を取得
-	VECTOR pPos = player_.lock()->GetPos();
+	auto playerPtr = player_.lock();
+	
+	VECTOR pPos = playerPtr->GetPos();
 
-	// エネミーからプレイヤーまでのベクトル
-	VECTOR diff = VSub(pPos, transform_.pos);
+	// エネミーからプレイヤーへのXZベクトル
+	VECTOR toPlayer = VSub(pPos, transform_.pos);
+	toPlayer.y = 0.0f;
 
 	// XZ距離
-	float distance = diff.x * diff.x + diff.z * diff.z;
+	float distanceXZ = toPlayer.x * toPlayer.x + toPlayer.z * toPlayer.z;
 
-	VECTOR vec;
-	vec = VSub(pPos, transform_.pos);
-	VECTOR direction = VNorm(vec);
+	// 近すぎたら攻撃状態に遷移
+	if (distanceXZ < 8.0f * 8.0f)
+	{
+		ChangeState(STATE::ATTACK);
+		return;
+	}
 
-	float length = Utility::MagnitudeF(vec);
+	// 進行方向
+	VECTOR direction = VNorm(toPlayer);
+
+	// 球面補間を行う
+	transform_.quaRot.x = 0.0f;
+	transform_.quaRot.z = 0.0f;
+	rot_ = Quaternion::Slerp(
+		transform_.quaRot, Quaternion::LookRotation(diff_), rotationStep_ / DEVIDE_STEPCOUNT);
+	transform_.quaRot = rot_;
+
+	// 移動速度
+	constexpr float MOVE_SPEED = 1.0f;
+	VECTOR pos = transform_.pos;
+	pos.x += direction.x * MOVE_SPEED;
+	pos.z += direction.z * MOVE_SPEED;
+	SetPos(pos);
 }
 
 void NormalEnemy::UpdateAttack(void)
 {
+	if (animationController_->IsEndPlayAnimation())
+	{
+		// 攻撃アニメーションが終わったらIDLEに戻す
+		ChangeState(STATE::IDLE);
+	}
 }
 
 void NormalEnemy::UpdateFlinch(void)

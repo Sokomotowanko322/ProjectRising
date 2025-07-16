@@ -260,8 +260,8 @@ void ColliderManager::CheckStageMeshCollision(ColliderData& capsuleCol, int stag
         capStart, capEnd, capsuleCol.radius_
     );
 
-    constexpr int PUSH_TRY_COUNT = 10;
-    constexpr float PUSH_FORCE = 0.1f;
+    constexpr int PUSH_TRY_COUNT = 5;
+    constexpr float PUSH_FORCE = 0.05f;
 
     VECTOR totalDelta = VGet(0, 0, 0);
 
@@ -412,6 +412,7 @@ void ColliderManager::HitAttackToDamage(const ColliderData& self, const Collider
         auto it = reactionTable_.find(animType);
         if (it != reactionTable_.end()) {
             VECTOR dir = VNorm(VSub(enemy->GetPos(), player->GetPos()));
+            player->HitEffect(enemy->GetPos());
             it->second(enemy, dir);
         }
         enemy->Damage(1);

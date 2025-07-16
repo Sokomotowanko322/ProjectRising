@@ -136,6 +136,8 @@ private:
 	float dot_;
 	
 	// 回転のステップ
+	float attackDelay_;
+	float cntDelay_;
 	float rotationStep_;
 };
 

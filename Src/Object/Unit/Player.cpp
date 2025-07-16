@@ -1,3 +1,4 @@
+#include <EffekseerForDXLib.h>
 #include "../../Application.h"
 #include "../../Manager/Camera.h"
 #include "../../Manager/SceneManager.h"
@@ -38,6 +39,7 @@ const int MAXHP = 100;
 int HP = MAXHP;
 const float NORMAL_ANIM_SPEED = 60.0f;
 const float FAST_ANIM_SPEED = 80.0f;
+const float EFFECT_HITSCALE = 20.0f;
 
 Player::Player() : ActorBase(),
 weapon_(std::make_shared<Weapon>()),
@@ -50,6 +52,7 @@ moveSpeed_(0.0f),
 goalQuaRot_(Quaternion()),
 playerRotY_(Quaternion()),
 isAttack_(false),
+isInvincible_(false),
 readyHighTime_(false),
 preForwardPressed_(false),
 preBackPressed_(false),
@@ -94,6 +97,9 @@ void Player::Init(void)
    // 腰のフレーム位置を取得
    waistPos_ = MV1GetFramePosition(transform_.modelId, waistFrame_);
 
+   // エフェクト再生
+   hitEfResId_ = resMng_.Load(ResourceManager::SRC::EFFECT_HIT).handleId_;
+
    // 武器追従のためフレームを取得
    rightHandFrame_ = MV1SearchFrame(transform_.modelId, "mixamorig:RightHandMiddle1");
 
@@ -125,11 +131,9 @@ void Player::Update(void)
 	// 左手のフレーム位置を取得し続ける
 	rightHandPos_ = MV1GetFramePosition(transform_.modelId, rightHandFrame_);
 
-	if(!isGrounded_)
-	{
-		// 重力をかける
-		CalculateGravity();
-	}
+	// 重力をかける
+	isGrounded_ = false;
+	CalculateGravity();
 
     // 移動量の初期化
     moveDir_ = Utility::VECTOR_ZERO;
@@ -137,7 +141,11 @@ void Player::Update(void)
 
 	// プレイヤーの移動制御
 	ProcessInput();
-	
+	if (isInvincible_)
+	{
+		Dodge();
+	}
+
     // 回転させる
     transform_.quaRot = playerRotY_;	
 
@@ -180,6 +188,11 @@ void Player::ProcessInput(void)
 			// アニメーション終了まで遷移できなくする
 			return;
 		}
+	}
+	if (ins.IsTriggered(InputManager::ACTION::SELECT_CANCEL))
+	{
+		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::DODGE]);
+		//Dodge();
 	}
 
 	// 前後方向入力の検出
@@ -255,7 +268,6 @@ void Player::ProcessInput(void)
 		movePow_ = VScale(moveDir_, SPEED_MOVE * RUN_SPEED_POW);
 		SetGoalRotate(rotRad_);
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::DASH]);
-		//BlendAnimation();
 		transform_.pos = VAdd(transform_.pos, movePow_);
 	}
 	else if (!Utility::EqualsVZero(moveDir_))
@@ -279,6 +291,15 @@ void Player::ProcessInput(void)
 		return;
 	}
 
+}
+
+void Player::Dodge(void)
+{
+	if (animationController_->IsEndPlayAnimation())
+	{
+		isInvincible_ = false;
+		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::IDLE]);
+	}
 }
 
 void Player::MoveControl(void)
@@ -335,6 +356,7 @@ void Player::MoveControl(void)
 	{
 		stepRotTime_ = TIMEROT_NORMAL;
 	}
+
 }
 
 VECTOR Player::GetPos() const
@@ -345,6 +367,14 @@ VECTOR Player::GetPos() const
 VECTOR Player::GetCenterPos() const
 {
 	return waistPos_;
+}
+
+void Player::HitEffect(VECTOR pos)
+{
+	hitEfPlayId_ = PlayEffekseer3DEffect(hitEfResId_);
+
+	SetPosPlayingEffekseer3DEffect(hitEfPlayId_, pos.x, pos.y, pos.z);
+	SetScalePlayingEffekseer3DEffect(hitEfPlayId_, EFFECT_HITSCALE, EFFECT_HITSCALE, EFFECT_HITSCALE);
 }
 
 const VECTOR& Player::GetRightHandPos() const
@@ -495,17 +525,17 @@ void Player::Rotate(void)
     playerRotY_ = Quaternion::Slerp(
         playerRotY_, goalQuaRot_, (TIME_ROT - stepRotTime_) / TIME_ROT);
 }
-
-void Player::CalculateGravity(void)
-{
-	// 例: Player/NormalEnemyのUpdate()内
-	constexpr float GRAVITY = -0.01f; // 重力加速度（調整可）
-
-	// 空中なら重力を加算
-	velocity_.y += GRAVITY;
-
-	// 速度を位置に反映
-	VECTOR pos = transform_.pos;
-	pos.y += velocity_.y;
-	SetPos(pos);
-}
+//
+//void Player::CalculateGravity(void)
+//{
+//	// 例: Player/NormalEnemyのUpdate()内
+//	constexpr float GRAVITY = -0.01f; // 重力加速度（調整可）
+//
+//	// 空中なら重力を加算
+//	velocity_.y += GRAVITY;
+//
+//	// 速度を位置に反映
+//	VECTOR pos = transform_.pos;
+//	pos.y += velocity_.y;
+//	SetPos(pos);
+//}
