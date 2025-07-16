@@ -40,7 +40,7 @@ TitleScene::~TitleScene(void)
 	}
 
 	// モデルの開放
-	SceneManager::GetInstance().GetWeapon()->~Weapon();
+	//SceneManager::GetInstance().GetWeapon()->~Weapon();
 
 	// エフェクト解放
 	DeleteEffekseerEffect(titleLightningResId_);

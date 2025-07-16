@@ -145,6 +145,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Scene\ResultScene.cpp" />
     <ClCompile Include="Src\Utility\CollisionUtility.cpp" />
     <ClCompile Include="Src\Object\Unit\NormalEnemy.cpp" />
     <ClCompile Include="Src\Object\SkyDome.cpp" />
@@ -177,6 +178,7 @@
     <ClCompile Include="Src\Object\Stage.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Src\Scene\ResultScene.h" />
     <ClInclude Include="Src\Collider\ColliderData.h" />
     <ClInclude Include="Src\Collider\ColliderType.h" />
     <ClInclude Include="Src\Utility\CollisionUtility.h" />

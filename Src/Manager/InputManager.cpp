@@ -101,7 +101,7 @@ InputManager::InputManager(void)
 
     inputActionMaps_[ACTION::DODGE] =
     {
-        {InputType::KEYBOARD,KEY_INPUT_Q},
+        {InputType::KEYBOARD,KEY_INPUT_C},
         {InputType::GAMEPAD,(int)JOYPAD_BTN::DOWN},
         //{InputType::MOUSE,MOUSE_INPUT_MIDDLE},
     };

@@ -133,6 +133,12 @@ void GameScene::Update(void)
 	auto pad = insI.GetJPadState(JOYPAD_NO::PAD1);
 	insI.SetControlType(InputManager::CONTROL_TYPE::KEY);
 
+	if (insI.IsTriggered(InputManager::ACTION::PAUSE))
+	{
+		/*PlaySoundMem(enterSe_, DX_PLAYTYPE_BACK, true);
+		count_ = BLINK_RATE;*/
+		SceneManager::GetInstance().ChangeScene(SceneManager::SCENE_ID::RESULT);
+	}
 	// ”wŒi’Ç]
 	skyDome_->Update();
 	

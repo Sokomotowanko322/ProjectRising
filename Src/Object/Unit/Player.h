@@ -55,7 +55,7 @@ public:
 
 	// ‘€ì
 	void ProcessInput(void);
-	void Dodge(void);
+	void ProcessDodge(void);
 	void MoveControl(void);
 
 	// æ“¾Œn

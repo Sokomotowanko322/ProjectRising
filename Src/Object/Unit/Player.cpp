@@ -39,7 +39,7 @@ const int MAXHP = 100;
 int HP = MAXHP;
 const float NORMAL_ANIM_SPEED = 60.0f;
 const float FAST_ANIM_SPEED = 80.0f;
-const float EFFECT_HITSCALE = 20.0f;
+const float EFFECT_HITSCALE = 10.0f;
 
 Player::Player() : ActorBase(),
 weapon_(std::make_shared<Weapon>()),
@@ -141,10 +141,7 @@ void Player::Update(void)
 
 	// プレイヤーの移動制御
 	ProcessInput();
-	if (isInvincible_)
-	{
-		Dodge();
-	}
+	ProcessDodge();
 
     // 回転させる
     transform_.quaRot = playerRotY_;	
@@ -188,11 +185,6 @@ void Player::ProcessInput(void)
 			// アニメーション終了まで遷移できなくする
 			return;
 		}
-	}
-	if (ins.IsTriggered(InputManager::ACTION::SELECT_CANCEL))
-	{
-		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::DODGE]);
-		//Dodge();
 	}
 
 	// 前後方向入力の検出
@@ -293,9 +285,17 @@ void Player::ProcessInput(void)
 
 }
 
-void Player::Dodge(void)
+void Player::ProcessDodge(void)
 {
-	if (animationController_->IsEndPlayAnimation())
+	if (InputManager::GetInstance().IsTriggered(InputManager::ACTION::BLOCK) && !isAttack_)
+	{
+		// 回避アニメーションの開始
+		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::DODGE]);
+		currentAnimType_ = ANIM_TYPE::DODGE;
+		isInvincible_ = true;
+		return;
+	}
+	if (animationController_->IsEndBlendingPlayAnimation("DODGE"))
 	{
 		isInvincible_ = false;
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::IDLE]);
@@ -425,7 +425,7 @@ void Player::InitAnimation(void)
 	animationController_->Add("FIRST_COMBO", path + "Combo1.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_FIRSTCOMBO), false, 0, false);
 	animationController_->Add("DODGE", path + "Dodge.mv1",
-		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_DODGE), false, 0, false);
+		0.0f, 60.0f, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_DODGE), false, 0, false);
 	animationController_->Add("HASWEAPON", path + "HasWeapon.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_HASARM), true, 0, false);
 }
