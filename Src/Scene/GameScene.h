@@ -48,5 +48,7 @@ private:
 	// Õ“Ë”»’è
 	std::unique_ptr<ColliderManager> colMng_;
 
+	int gameBgm_;
+
 };
 

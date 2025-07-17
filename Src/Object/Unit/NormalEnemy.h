@@ -64,6 +64,9 @@ public:
 	// ó‘Ô‘JˆÚ
 	void ChangeState(STATE state);
 
+	// HP‚Ìæ“¾
+	int GetHP() const;
+
 	// ˆÊ’u‚Ìæ“¾
 	VECTOR GetPos() const override;
 
@@ -131,6 +134,8 @@ private:
 
 	// ˜‚Ü‚í‚è‚ÌƒtƒŒ[ƒ€
 	int waistFrame_;
+
+	int enemyHp_;
 
 	// ‰ñ“]‚Ì“àÏ
 	float dot_;

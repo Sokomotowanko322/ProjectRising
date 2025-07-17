@@ -32,7 +32,8 @@ const float LONG_RANGE = 70.0f;
 NormalEnemy::NormalEnemy(std::weak_ptr<Player> player) : ActorBase(),
 animationController_(std::make_unique<AnimationController>(transform_.modelId)),
 diff_(Utility::VECTOR_ZERO),
-rotationStep_(0.0f),frameNo_(-1)
+rotationStep_(0.0f), frameNo_(-1),
+enemyHp_(10)
 {
 	player_ = player;
 	stateChange_[STATE::IDLE] = std::bind(&NormalEnemy::ChangeIdle, this);
@@ -101,6 +102,7 @@ void NormalEnemy::Draw(void)
 
 void NormalEnemy::Damage(int damageAmount)
 {
+	enemyHp_ -= damageAmount;
 }
 
 void NormalEnemy::ChangeState(STATE state)
@@ -116,6 +118,11 @@ void NormalEnemy::ChangeState(STATE state)
 	animationKey_ = ANIM_DATA_KEY[(int)state];
 
 	animationController_->ChangeAnimation(animationKey_);
+}
+
+int NormalEnemy::GetHP() const
+{
+	return enemyHp_;
 }
 
 VECTOR NormalEnemy::GetPos() const

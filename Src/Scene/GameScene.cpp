@@ -1,6 +1,7 @@
 #include "../Manager/Camera.h"
 #include "../Manager/InputManager.h"
 #include "../Manager/ColliderManager.h"
+#include "../Manager/ResourceManager.h"
 #include "../Manager/SceneManager.h"
 #include "../Utility/Utility.h"
 #include "../Common/Fader.h"
@@ -44,7 +45,7 @@ void GameScene::Init(void)
 	// ステージ
 	stage_ = std::make_shared<Stage>();
 	stage_->Init();
-	
+
 	// スカイドーム
 	skyDome_ = std::make_unique<SkyDome>(player_->GetTransform());
 	skyDome_->Init();
@@ -55,6 +56,10 @@ void GameScene::Init(void)
 	// カメラの初期化
 	mainCamera.SetFollow(&player_->GetTransform());
 	mainCamera.ChangeMode(Camera::MODE::FOLLOW);
+
+	gameBgm_ = resMng_.Load(ResourceManager::SRC::SOUND_TITLEBGM).handleId_;
+
+	PlaySoundMem(gameBgm_, DX_PLAYTYPE_BACK);
 }
 
 void GameScene::AddColliders(void)
@@ -133,7 +138,7 @@ void GameScene::Update(void)
 	auto pad = insI.GetJPadState(JOYPAD_NO::PAD1);
 	insI.SetControlType(InputManager::CONTROL_TYPE::KEY);
 
-	if (insI.IsTriggered(InputManager::ACTION::PAUSE))
+	if (insI.IsTriggered(InputManager::ACTION::PAUSE) || normalEnemy_->GetHP() == 0)
 	{
 		/*PlaySoundMem(enterSe_, DX_PLAYTYPE_BACK, true);
 		count_ = BLINK_RATE;*/

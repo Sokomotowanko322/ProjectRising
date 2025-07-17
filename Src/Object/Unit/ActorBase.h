@@ -6,6 +6,7 @@
 
 class SceneManager;
 class ResourceManager;
+class ColliderManager;
 class Player;
 
 class ActorBase
@@ -45,7 +46,7 @@ protected:
     Transform transform_;
     ResourceManager& resMng_;
     SceneManager& scnMng_;
-
+ 
 	// プレイヤーの参照
     std::weak_ptr<Player> player_;
     

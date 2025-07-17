@@ -19,6 +19,7 @@ public:
 		HIT_IMAGE,
 		HIT_NUMIMAGE,
 		TITLE_IMAGE,
+		RESULT_IMAGE,
 		TITLE_IMAGE_LIGHT,
 		START_LOGO,
 		HP_FRAME,
@@ -71,6 +72,7 @@ public:
 
 		SOUND_TITLEBGM,
 		SOUND_ENTER,
+		SOUND_SWORD_ATTACK,
 
 #pragma endregion
 

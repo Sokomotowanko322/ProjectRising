@@ -3,6 +3,7 @@
 #include "../../Manager/Camera.h"
 #include "../../Manager/SceneManager.h"
 #include "../../Manager/ResourceManager.h"
+#include "../../Manager/ColliderManager.h"
 #include "../../Manager/InputManager.h"
 #include "../../Controller/AnimationController.h"
 #include "../../Utility/Utility.h"
@@ -39,7 +40,7 @@ const int MAXHP = 100;
 int HP = MAXHP;
 const float NORMAL_ANIM_SPEED = 60.0f;
 const float FAST_ANIM_SPEED = 80.0f;
-const float EFFECT_HITSCALE = 10.0f;
+const float EFFECT_HITSCALE = 70.0f;
 
 Player::Player() : ActorBase(),
 weapon_(std::make_shared<Weapon>()),
@@ -53,6 +54,7 @@ goalQuaRot_(Quaternion()),
 playerRotY_(Quaternion()),
 isAttack_(false),
 isInvincible_(false),
+isHitStop_(false),
 readyHighTime_(false),
 preForwardPressed_(false),
 preBackPressed_(false),
@@ -61,7 +63,8 @@ frameNo_(-1),
 legsAnimId_(-1), 
 rightHandFrame_(-1),
 rightHandPos_(Utility::VECTOR_ZERO),
-rotRad_(0.0f)
+rotRad_(0.0f),
+hitStopTimer_(0.0f)
 {
   
 }
@@ -91,6 +94,8 @@ void Player::Init(void)
    // 武器の初期化
    weapon_->Init();
 
+   colMng_ = std::make_unique<ColliderManager>();
+
    // ステージとの判定用に中心を取得
    waistFrame_ = MV1SearchFrame(transform_.modelId, "mixamorig:Head");
    
@@ -119,6 +124,16 @@ void Player::Init(void)
 
 void Player::Update(void)
 {
+	if (isHitStop_)
+	{
+		hitStopTimer_ -= SceneManager::GetInstance().GetDeltaTime();
+		if (hitStopTimer_ <= 0.0f)
+		{
+			isHitStop_ = false;
+		}
+		return; // ヒットストップ中は処理を止める
+	}
+	// 通常処理
 	// プレイヤーの更新
 	transform_.Update();
 
@@ -167,10 +182,13 @@ void Player::ProcessInput(void)
 	if (!isAttack_)
 	{
 		weapon_->StopEffect();
+		colMng_->ResetHitCount();
+
 	}
 	// 攻撃アニメーション中は他の入力を受け付けないようにする
 	if (isAttack_)
 	{
+		
 		weapon_->StartEffect();
 		// アニメーションが終わったか判定
 		if (animationController_->IsEndBlendingPlayAnimation("SMASH") ||
@@ -375,6 +393,13 @@ void Player::HitEffect(VECTOR pos)
 
 	SetPosPlayingEffekseer3DEffect(hitEfPlayId_, pos.x, pos.y, pos.z);
 	SetScalePlayingEffekseer3DEffect(hitEfPlayId_, EFFECT_HITSCALE, EFFECT_HITSCALE, EFFECT_HITSCALE);
+}
+
+void Player::HitStop(float time)
+{
+	isHitStop_ = true;
+	hitStopTimer_ = time; // ヒットストップ時間
+	SceneManager::GetInstance().GetCamera().SetCameraShake(0.15f, 0.5f);
 }
 
 const VECTOR& Player::GetRightHandPos() const

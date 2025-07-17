@@ -45,8 +45,8 @@ void ResourceManager::Init(void)
 	resourcesMap_.emplace(SRC::HIT_NUMIMAGE, std::move(res));
 
 	// リザルト画像
-	res = std::make_unique<Resource>(Resource::TYPE::IMG, Application::PATH_IMAGE + "ResultImage.png");
-	resourcesMap_.emplace(SRC::RESULT, std::move(res));
+	res = std::make_unique<Resource>(Resource::TYPE::IMG, Application::PATH_IMAGE + "ClearLogo.png");
+	resourcesMap_.emplace(SRC::RESULT_IMAGE, std::move(res));
 
 	// PushSpace
 	res = std::make_unique<Resource>(Resource::TYPE::IMG, Application::PATH_IMAGE + "PushSpace.png");
@@ -169,8 +169,12 @@ void ResourceManager::Init(void)
 	resourcesMap_.emplace(SRC::SOUND_ENTER, std::move(res));
 
 	// タイトル画面BGM 
-	res = std::make_unique<Resource>(Resource::TYPE::SOUND, Application::PATH_SOUND + "TitleBgm.mp3");
+	res = std::make_unique<Resource>(Resource::TYPE::SOUND, Application::PATH_SOUND + "BattleBGM.mp3");
 	resourcesMap_.emplace(SRC::SOUND_TITLEBGM, std::move(res));
+	
+	// 攻撃時SE
+	res = std::make_unique<Resource>(Resource::TYPE::SOUND, Application::PATH_SOUND + "SwordAttack.mp3");
+	resourcesMap_.emplace(SRC::SOUND_SWORD_ATTACK, std::move(res));
 
 #pragma endregion
 

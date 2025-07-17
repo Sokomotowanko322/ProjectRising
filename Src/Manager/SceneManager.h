@@ -38,10 +38,10 @@ public:
 	/// 衝突判定登録情報の取得
 	/// </summary>
 	/// <returns>ColliderManagerの参照</returns>
-	/*inline ColliderManager& GetColManager(void) const
+	inline ColliderManager& GetColManager(void) const
 	{
 		return *colMng_;
-	}*/
+	}
 
 	/// <summary>
 	/// 衝突判定の取得
@@ -112,6 +112,9 @@ private:
 
 	// カメラ
 	std::unique_ptr<Camera> camera_;
+	
+	// カメラ
+	std::unique_ptr<ColliderManager> colMng_;
 
 	// シーン遷移中判定
 	bool isSceneChanging_;

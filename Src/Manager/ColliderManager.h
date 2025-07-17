@@ -2,6 +2,7 @@
 #include <memory>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <functional>
 #include "../Collider/ColliderData.h"
 #include "../Object/Unit/ActorBase.h"
@@ -28,6 +29,10 @@ public:
 	// 衝突判定を行う
     bool IsWeaponEnemyPair(const ColliderData& weaponCol, const ColliderData& enemyCol);
 
+    // リセット関数
+    void ResetHitCount();
+
+
 private:
 
     // 複数アクターを管理
@@ -51,4 +56,8 @@ private:
     void ResolveStageCollision(ColliderData& mover, const ColliderData& stage);
     void ResolveCapsuleCollision(ColliderData& a, ColliderData& b);
     void HitAttackToDamage(const ColliderData& self, const ColliderData& target, Player* player);
+
+    // ヒット回数
+    int hitCount_ = 0;
+    std::unordered_set<int> hitEnemyIds_; // ヒット済み敵ID
 };

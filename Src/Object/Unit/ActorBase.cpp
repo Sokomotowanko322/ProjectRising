@@ -1,5 +1,6 @@
 #include "../../Manager/SceneManager.h"
 #include "../../Manager/ResourceManager.h"
+#include "../../Manager/ColliderManager.h"
 #include "../../Utility/Utility.h"
 #include "ActorBase.h"
 

@@ -49,16 +49,16 @@ ResultScene::~ResultScene(void)
 
 void ResultScene::Init(void)
 {
-	// それぞれ専用のスクリーンを作成
-	effectScr_ = MakeScreen(Application::SCREEN_SIZE_X, Application::SCREEN_SIZE_Y, true);
-	objectScr_ = MakeScreen(Application::SCREEN_SIZE_X, Application::SCREEN_SIZE_Y, true);
+	//// それぞれ専用のスクリーンを作成
+	//effectScr_ = MakeScreen(Application::SCREEN_SIZE_X, Application::SCREEN_SIZE_Y, true);
+	//objectScr_ = MakeScreen(Application::SCREEN_SIZE_X, Application::SCREEN_SIZE_Y, true);
 
 	// 武器の初期化
-	SceneManager::GetInstance().GetWeapon()->Init();
+	//SceneManager::GetInstance().GetWeapon()->Init();
 
 	// ロゴの初期化
-	resultLogo_ = resMng_.Load(ResourceManager::SRC:: TITLE_IMAGE).handleId_;
-	resultLogoLight_ = resMng_.Load(ResourceManager::SRC::TITLE_IMAGE_LIGHT).handleId_;
+	resultLogo_ = resMng_.Load(ResourceManager::SRC:: RESULT_IMAGE).handleId_;
+	//resultLogoLight_ = resMng_.Load(ResourceManager::SRC::TITLE_IMAGE_LIGHT).handleId_;
 
 	// ロゴのエフェクト
 	resultLightningResId_ = resMng_.Load(ResourceManager::SRC::EFFECT_TITLE_LIGHTNING).handleId_;
@@ -75,7 +75,7 @@ void ResultScene::Init(void)
 void ResultScene::Update(void)
 {
 	// Weaponの更新
-	SceneManager::GetInstance().GetWeapon()->TitleUpdate();
+	//SceneManager::GetInstance().GetWeapon()->TitleUpdate();
 
 	// ロゴ点滅制御
 	float delta = SceneManager::GetInstance().GetDeltaTime();
@@ -115,26 +115,26 @@ void ResultScene::Update(void)
 
 void ResultScene::Draw(void)
 {
-	// エフェクト用スクリーン
-	SetDrawScreen(effectScr_);
-	ClearDrawScreen();
+	//// エフェクト用スクリーン
+	//SetDrawScreen(effectScr_);
+	//ClearDrawScreen();
 
-	// エフェクトの描画
-	if (isLogoLightVisible_)
-	{
-		SetPosPlayingEffekseer3DEffect(resultLightningPlayId_, DRAW_RESULT_EFFECT_POS.x, DRAW_RESULT_EFFECT_POS.y, DRAW_RESULT_EFFECT_POS.z);
-		SetScalePlayingEffekseer3DEffect(resultLightningPlayId_, EFFECT_SCALE.x, EFFECT_SCALE.y, EFFECT_SCALE.z);
-		SetRotationPlayingEffekseer3DEffect(resultLightningPlayId_, 0.0f, 0.0f, 0.0f);
-		resultLightningPlayId_ = PlayEffekseer3DEffect(resultLightningResId_);
-	}
-	else
-	{
-		StopEffekseer3DEffect(resultLightningPlayId_);
-	}
+	//// エフェクトの描画
+	//if (isLogoLightVisible_)
+	//{
+	//	SetPosPlayingEffekseer3DEffect(resultLightningPlayId_, DRAW_RESULT_EFFECT_POS.x, DRAW_RESULT_EFFECT_POS.y, DRAW_RESULT_EFFECT_POS.z);
+	//	SetScalePlayingEffekseer3DEffect(resultLightningPlayId_, EFFECT_SCALE.x, EFFECT_SCALE.y, EFFECT_SCALE.z);
+	//	SetRotationPlayingEffekseer3DEffect(resultLightningPlayId_, 0.0f, 0.0f, 0.0f);
+	//	resultLightningPlayId_ = PlayEffekseer3DEffect(resultLightningResId_);
+	//}
+	//else
+	//{
+	//	StopEffekseer3DEffect(resultLightningPlayId_);
+	//}
 
-	// オブジェクト用スクリーン
-	SetDrawScreen(objectScr_);
-	ClearDrawScreen();
+	//// オブジェクト用スクリーン
+	//SetDrawScreen(objectScr_);
+	//ClearDrawScreen();
 
 	// ロゴの描画
 	DrawGraph(DRAW_RESULT_POS_X, DRAW_RESULT_POS_Y, resultLogo_, true);

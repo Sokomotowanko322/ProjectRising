@@ -68,6 +68,9 @@ public:
 	// ヒット時のエフェクト
 	void HitEffect(VECTOR pos);
 
+	// ヒットストップ
+	void HitStop(float time);
+
 	// プレイヤーの位置をコライダと合わせる
 	void SetPos(const VECTOR& pos)override;
 
@@ -82,6 +85,9 @@ private:
 
 	// アニメーション
 	std::unique_ptr<AnimationController> animationController_;
+
+	// 衝突判定
+	std::unique_ptr<ColliderManager> colMng_;
 
 	// 武器(主にプレイヤー用として機能させる)
 	std::shared_ptr<Weapon> weapon_;
@@ -132,6 +138,9 @@ private:
 	int hitEfResId_;
 	int hitEfPlayId_;
 
+	// ヒットストップ
+	float hitStopTimer_;
+
 	// 回転
 	Quaternion playerRotY_;
 	Quaternion goalQuaRot_;
@@ -141,6 +150,7 @@ private:
 	// フラグ管理
 	bool isAttack_;
 	bool isInvincible_;
+	bool isHitStop_;
 	
 	// アニメーションの初期化
 	void InitAnimation(void);

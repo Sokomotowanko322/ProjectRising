@@ -54,18 +54,6 @@ void ColliderManager::Update()
         {
             UpdateColliders();
             CheckCollisions();
-
-            //// --- ここでコライダーの位置をアクター本体に反映 ---
-            //for (auto& col : colliders_)
-            //{
-            //    // 右手コライダーは除外
-            //    if (col.type_ == ColliderType::Capsule &&
-            //        col.ownerID_ == actor->GetTransform().modelId &&
-            //        !col.isRightHand_)
-            //    {
-            //        actor->SetPos(col.pos_);
-            //    }
-            //}
             ++i;
         }
         else
@@ -169,6 +157,21 @@ void ColliderManager::UpdateColliders()
 }
 
 void ColliderManager::CheckCollisions() {
+    // プレイヤー攻撃開始検知（ColliderManager内で完結）
+    static bool prevPlayerAttack = false;
+    Player* player = nullptr;
+    for (auto& weakActor : actors_) {
+        if (auto actor = weakActor.lock()) {
+            player = dynamic_cast<Player*>(actor.get());
+            if (player) break;
+        }
+    }
+    bool nowAttack = player && player->IsAttack();
+    if (nowAttack && !prevPlayerAttack) {
+        ResetHitCount();
+    }
+    prevPlayerAttack = nowAttack;
+
     for (size_t i = 0; i < colliders_.size(); ++i) {
         for (size_t j = i + 1; j < colliders_.size(); ++j) {
             ColliderData& a = colliders_[i];
@@ -182,12 +185,10 @@ void ColliderManager::CheckCollisions() {
             }
 
             // --- 武器コライダと敵コライダの攻撃判定 ---
-            // aが武器コライダ、bが敵コライダの場合
             if (a.type_ == ColliderType::Capsule && a.isTrigger_ &&
                 b.type_ == ColliderType::Capsule && !b.isTrigger_ &&
                 IsWeaponEnemyPair(a, b)) {
 
-                // カプセル端点
                 VECTOR wStart = VAdd(a.pos_, VScale(a.dir_, -a.length_ * 0.5f));
                 VECTOR wEnd = VAdd(a.pos_, VScale(a.dir_, a.length_ * 0.5f));
                 VECTOR eStart = VAdd(b.pos_, VScale(b.dir_, -b.length_ * 0.5f));
@@ -205,7 +206,23 @@ void ColliderManager::CheckCollisions() {
                     if (!weapon) continue;
                     Player* player = FindPlayerByWeapon(weapon);
                     if (player && player->IsAttack()) {
-                        HitAttackToDamage(a, b, player);
+                        ActorBase* victim = nullptr;
+                        for (auto& weakActor : actors_) {
+                            if (auto actor = weakActor.lock()) {
+                                if (actor->GetTransform().modelId == b.ownerID_) {
+                                    victim = actor.get();
+                                    break;
+                                }
+                            }
+                        }
+                        if (auto enemy = dynamic_cast<NormalEnemy*>(victim)) {
+                            int enemyId = enemy->GetTransform().modelId;
+                            if (hitCount_ < 20 && hitEnemyIds_.count(enemyId) == 0) {
+                                HitAttackToDamage(a, b, player);
+                                hitEnemyIds_.insert(enemyId);
+                                ++hitCount_;
+                            }
+                        }
                     }
                 }
             }
@@ -231,18 +248,34 @@ void ColliderManager::CheckCollisions() {
                     if (!weapon) continue;
                     Player* player = FindPlayerByWeapon(weapon);
                     if (player && player->IsAttack()) {
-                        HitAttackToDamage(b, a, player);
+                        ActorBase* victim = nullptr;
+                        for (auto& weakActor : actors_) {
+                            if (auto actor = weakActor.lock()) {
+                                if (actor->GetTransform().modelId == a.ownerID_) {
+                                    victim = actor.get();
+                                    break;
+                                }
+                            }
+                        }
+                        if (auto enemy = dynamic_cast<NormalEnemy*>(victim)) {
+                            int enemyId = enemy->GetTransform().modelId;
+                            if (hitCount_ < 20 && hitEnemyIds_.count(enemyId) == 0) {
+                                HitAttackToDamage(b, a, player);
+                                hitEnemyIds_.insert(enemyId);
+                                ++hitCount_;
+                            }
+                        }
                     }
                 }
             }
 
             // ステージとの衝突
             if (a.type_ == ColliderType::Capsule && b.type_ == ColliderType::StageTransform) {
-                CheckStageMeshCollision(a, b.ownerID_); 
+                CheckStageMeshCollision(a, b.ownerID_);
                 continue;
             }
             if (b.type_ == ColliderType::Capsule && a.type_ == ColliderType::StageTransform) {
-                CheckStageMeshCollision(b, a.ownerID_); 
+                CheckStageMeshCollision(b, a.ownerID_);
                 continue;
             }
         }
@@ -413,8 +446,16 @@ void ColliderManager::HitAttackToDamage(const ColliderData& self, const Collider
         if (it != reactionTable_.end()) {
             VECTOR dir = VNorm(VSub(enemy->GetPos(), player->GetPos()));
             player->HitEffect(enemy->GetPos());
+            // ヒットストップ・カメラシェイク
+            player->HitStop(0.2f); // ← Playerに通知
             it->second(enemy, dir);
         }
-        enemy->Damage(1);
+        enemy->Damage(2);
     }
+}
+
+void ColliderManager::ResetHitCount()
+{
+    hitEnemyIds_.clear();
+    hitCount_ = 0;
 }

@@ -8,7 +8,7 @@
 #include "../Scene/SceneBase.h"
 #include "Camera.h"
 //#include "../Object/Common/Collider/Collision.h"
-//#include "../Object/Common/Collider/ColliderManager.h"
+#include "../Manager/ColliderManager.h"
 #include "ResourceManager.h"
 #include "SceneManager.h"
 
