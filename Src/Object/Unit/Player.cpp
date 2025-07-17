@@ -436,21 +436,27 @@ void Player::InitAnimation(void)
 	// IDLEó‘Ô
 	animationController_->Add("IDLE", path + "Idle.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_IDLE), true, 0, false);
-    animationController_->Add("WALK", path + "Walk.mv1",
+  
+	// ˆÚ“®
+	animationController_->Add("WALK", path + "Walk.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_WALK), true, 0, false);
 	animationController_->Add("RUN", path + "Run.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_RUN), true, 0, false);
 	animationController_->Add("DASH", path + "Dash.mv1",
 		0.0f, FAST_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_DASH), true, 0, false);
 	
+	// UŒ‚
 	animationController_->Add("HIGHTIME", path + "HighTime.mv1",
 		0.0f, FAST_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_HIGH_TIME), false, 0, false);
 	animationController_->Add("SMASH", path + "SmashAttack.mv1",
 		0.0f, FAST_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_SMASH_ATTACK), false, 0, false);
 	animationController_->Add("FIRST_COMBO", path + "Combo1.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_FIRSTCOMBO), false, 0, false);
+
+	// ‰ñ”ð
 	animationController_->Add("DODGE", path + "Dodge.mv1",
-		0.0f, 60.0f, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_DODGE), false, 0, false);
+		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_DODGE), false, 0, false);
+
 	animationController_->Add("HASWEAPON", path + "HasWeapon.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_HASARM), true, 0, false);
 }
