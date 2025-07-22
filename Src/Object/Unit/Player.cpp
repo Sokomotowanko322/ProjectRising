@@ -88,6 +88,15 @@ void Player::Init(void)
    transform_.quaRotLocal =
 	   Quaternion::Euler({ 0.0f, Utility::Deg2RadF(180.0f), 0.0f });
 
+   stateChange_[STATE::IDLE] = std::bind(&Player::ChangeIdle, this);
+   stateChange_[STATE::MOVE] = std::bind(&Player::ChangeMove, this);
+   stateChange_[STATE::DODGE] = std::bind(&Player::ChangeDodge, this);
+   stateChange_[STATE::FIRST_COMBO] = std::bind(&Player::ChangeFirstAttack, this);
+   stateChange_[STATE::SMASH] = std::bind(&Player::ChangeSmash, this);
+   stateChange_[STATE::HIGHTIME] = std::bind(&Player::ChangeHightime, this);
+   stateChange_[STATE::DAMAGE] = std::bind(&Player::ChangeDamage, this);
+   stateChange_[STATE::DEATH] = std::bind(&Player::ChangeDeath, this);
+
    // アニメーションの初期化
    InitAnimation();
 
@@ -120,6 +129,9 @@ void Player::Init(void)
 
    // 手を前に出しているアニメーションのブレンド率をセット
    MV1SetAttachAnimBlendRate(transform_.modelId, armAnimId_, 0.0f);
+
+   // 初期状態をIDLEに設定
+   ChangeState(STATE::IDLE);
 }
 
 void Player::Update(void)
@@ -133,8 +145,11 @@ void Player::Update(void)
 		}
 		return; // ヒットストップ中は処理を止める
 	}
-	// 通常処理
-	// プレイヤーの更新
+
+	// 関数ポインタ更新
+	stateUpdate_();
+
+	// モデル情報更新
 	transform_.Update();
 
 	// アニメーションの更新
@@ -256,7 +271,7 @@ void Player::ProcessInput(void)
 
 	if (readyHighTime_ && nowForwardPressed && ins.IsPressed(InputManager::ACTION::ATTACK))
 	{
-		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::HIGHTIME]);
+		ChangeState(STATE::HIGHTIME);
 		currentAnimType_ = ANIM_TYPE::HIGHTIME;
 		isAttack_ = true;
 		moveForwardCount_ = 0;
@@ -427,6 +442,21 @@ bool Player::IsAttack() const
 	return isAttack_;
 }
 
+void Player::ChangeState(STATE state)
+{
+	preState_ = state_;
+
+	state_ = state;
+
+	stateChange_[state_]();
+
+	preAnimationKey_ = animationKey_;
+
+	animationKey_ = ANIM_DATA_KEY[(int)state];
+
+	animationController_->ChangeAnimation(animationKey_);
+}
+
 void Player::InitAnimation(void)
 {
 	std::string path = Application::PATH_MODEL + "Player/Anim/";
@@ -556,6 +586,79 @@ void Player::Rotate(void)
     playerRotY_ = Quaternion::Slerp(
         playerRotY_, goalQuaRot_, (TIME_ROT - stepRotTime_) / TIME_ROT);
 }
+
+void Player::ChangeIdle(void)
+{
+	stateUpdate_ = std::bind(&Player::UpdateIdle, this);
+}
+
+void Player::ChangeMove(void)
+{
+	stateUpdate_ = std::bind(&Player::UpdateMove, this);
+}
+
+void Player::ChangeFirstAttack(void)
+{
+	stateUpdate_ = std::bind(&Player::UpdateFirstAttack, this);
+}
+
+void Player::ChangeSmash(void)
+{
+	stateUpdate_ = std::bind(&Player::UpdateSmash, this);
+}
+
+void Player::ChangeHightime(void)
+{
+	stateUpdate_ = std::bind(&Player::UpdateHightime, this);
+}
+
+void Player::ChangeDodge(void)
+{
+	stateUpdate_ = std::bind(&Player::UpdateDodge, this);
+}
+
+void Player::ChangeDamage(void)
+{
+	stateUpdate_ = std::bind(&Player::UpdateDamage, this);
+}
+
+void Player::ChangeDeath(void)
+{
+	stateUpdate_ = std::bind(&Player::UpdateDeath, this);
+}
+
+void Player::UpdateIdle(void)
+{
+}
+
+void Player::UpdateMove(void)
+{
+}
+
+void Player::UpdateFirstAttack(void)
+{
+}
+
+void Player::UpdateSmash(void)
+{
+}
+
+void Player::UpdateHightime(void)
+{
+}
+
+void Player::UpdateDodge(void)
+{
+}
+
+void Player::UpdateDamage(void)
+{
+}
+
+void Player::UpdateDeath(void)
+{
+}
+
 //
 //void Player::CalculateGravity(void)
 //{
