@@ -123,10 +123,40 @@ void Camera::Init(void)
 
 void Camera::Update(void)
 {
-
+	// カメラ更新
 	modeUpdate_();
-
 	CameraShake();
+
+	// FOV補間部分（Update内）
+	if (zoomLerpTime_ > 0.0f)
+	{
+		zoomLerpTime_ -= TimeManager::GetInstance().GetDeltaTime();
+		float t = 1.0f - (zoomLerpTime_ / zoomLerpDuration_);
+		float fov = zoomStartFov_ + (zoomTargetFov_ - zoomStartFov_) * t;
+		currentFov_ = fov;
+		SetCameraPerspective(currentFov_); // DxLibのFOV設定
+		if (zoomLerpTime_ <= 0.0f)
+		{
+			currentFov_ = zoomTargetFov_;
+			SetCameraPerspective(currentFov_);
+		}
+	}
+
+	// 注視点補間
+	if (angleLerpTime_ > 0.0f)
+	{
+		angleLerpTime_ -= TimeManager::GetInstance().GetDeltaTime();
+		float t = 1.0f - (angleLerpTime_ / angleLerpDuration_);
+		targetPos_ = {
+			angleStartTarget_.x + (angleTarget_.x - angleStartTarget_.x) * t,
+			angleStartTarget_.y + (angleTarget_.y - angleStartTarget_.y) * t,
+			angleStartTarget_.z + (angleTarget_.z - angleStartTarget_.z) * t
+		};
+		if (angleLerpTime_ <= 0.0f)
+		{
+			targetPos_ = angleTarget_;
+		}
+	}
 
 }
 
@@ -213,6 +243,23 @@ void Camera::CameraShake(void)
 		isShake_ = false;
 	}
 
+}
+
+void Camera::SetZoom(float fov, float duration)
+{
+	// 現在のFOVを取得
+	zoomStartFov_ = GetCameraFov();
+	zoomTargetFov_ = fov;
+	zoomLerpTime_ = duration;
+	zoomLerpDuration_ = duration;
+}
+
+void Camera::SetAngle(const VECTOR& targetPos, float duration)
+{
+	angleStartTarget_ = targetPos_;
+	angleTarget_ = targetPos;
+	angleLerpTime_ = duration;
+	angleLerpDuration_ = duration;
 }
 
 void Camera::SetDefQuaRot(const Quaternion& qua)

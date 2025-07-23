@@ -14,8 +14,8 @@
 // モデルのHips
 char FRAME_HIPS[] = "mixamorig:Hips";
 
-const VECTOR INIT_POS = {0.0f,0.0f,0.0f};
-const VECTOR MODEL_SCALE = {1.0f,1.0f,1.0f};
+const VECTOR INIT_POS = { 0.0f,0.0f,0.0f };
+const VECTOR MODEL_SCALE = { 1.0f,1.0f,1.0f };
 
 // 回転完了までの時間
 static constexpr float TIME_ROT = 1.0f;
@@ -60,13 +60,13 @@ preForwardPressed_(false),
 preBackPressed_(false),
 armAnimId_(-1),
 frameNo_(-1),
-legsAnimId_(-1), 
+legsAnimId_(-1),
 rightHandFrame_(-1),
 rightHandPos_(Utility::VECTOR_ZERO),
 rotRad_(0.0f),
 hitStopTimer_(0.0f)
 {
-  
+
 }
 
 Player::~Player()
@@ -78,60 +78,48 @@ Player::~Player()
 	}
 }
 
-void Player::Init(void)  
-{  
+void Player::Init(void)
+{
 	// モデル情報の初期化
-   transform_.modelId = resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER);  
-   transform_.pos = INIT_POS;
-   transform_.scl = MODEL_SCALE;
-   transform_.quaRot = Quaternion();
-   transform_.quaRotLocal =
-	   Quaternion::Euler({ 0.0f, Utility::Deg2RadF(180.0f), 0.0f });
+	transform_.modelId = resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER);
+	transform_.pos = INIT_POS;
+	transform_.scl = MODEL_SCALE;
+	transform_.quaRot = Quaternion();
+	transform_.quaRotLocal =
+		Quaternion::Euler({ 0.0f, Utility::Deg2RadF(180.0f), 0.0f });
 
-   stateChange_[STATE::IDLE] = std::bind(&Player::ChangeIdle, this);
-   stateChange_[STATE::MOVE] = std::bind(&Player::ChangeMove, this);
-   stateChange_[STATE::DODGE] = std::bind(&Player::ChangeDodge, this);
-   stateChange_[STATE::FIRST_COMBO] = std::bind(&Player::ChangeFirstAttack, this);
-   stateChange_[STATE::SMASH] = std::bind(&Player::ChangeSmash, this);
-   stateChange_[STATE::HIGHTIME] = std::bind(&Player::ChangeHightime, this);
-   stateChange_[STATE::DAMAGE] = std::bind(&Player::ChangeDamage, this);
-   stateChange_[STATE::DEATH] = std::bind(&Player::ChangeDeath, this);
+	// アニメーションの初期化
+	InitAnimation();
 
-   // アニメーションの初期化
-   InitAnimation();
+	// 武器の初期化
+	weapon_->Init();
 
-   // 武器の初期化
-   weapon_->Init();
+	colMng_ = std::make_unique<ColliderManager>();
 
-   colMng_ = std::make_unique<ColliderManager>();
+	// ステージとの判定用に中心を取得
+	waistFrame_ = MV1SearchFrame(transform_.modelId, "mixamorig:Head");
 
-   // ステージとの判定用に中心を取得
-   waistFrame_ = MV1SearchFrame(transform_.modelId, "mixamorig:Head");
-   
-   // 腰のフレーム位置を取得
-   waistPos_ = MV1GetFramePosition(transform_.modelId, waistFrame_);
+	// 腰のフレーム位置を取得
+	waistPos_ = MV1GetFramePosition(transform_.modelId, waistFrame_);
 
-   // エフェクト再生
-   hitEfResId_ = resMng_.Load(ResourceManager::SRC::EFFECT_HIT).handleId_;
+	// エフェクト再生
+	hitEfResId_ = resMng_.Load(ResourceManager::SRC::EFFECT_HIT).handleId_;
 
-   // 武器追従のためフレームを取得
-   rightHandFrame_ = MV1SearchFrame(transform_.modelId, "mixamorig:RightHandMiddle1");
+	// 武器追従のためフレームを取得
+	rightHandFrame_ = MV1SearchFrame(transform_.modelId, "mixamorig:RightHandMiddle1");
 
-   // 移動地無効化用
-   frameNo_ = MV1SearchFrame(transform_.modelId, FRAME_HIPS);
+	// 移動地無効化用
+	frameNo_ = MV1SearchFrame(transform_.modelId, FRAME_HIPS);
 
-   // ブレンド用アニメーションのアタッチ
-   legsAnimId_ = MV1AttachAnim(transform_.modelId, (int)ANIM_TYPE::DASH, -1, false);
-   armAnimId_ = MV1AttachAnim(transform_.modelId, (int)ANIM_TYPE::HASWEAPON, -1, false);
+	// ブレンド用アニメーションのアタッチ
+	legsAnimId_ = MV1AttachAnim(transform_.modelId, (int)ANIM_TYPE::DASH, -1, false);
+	armAnimId_ = MV1AttachAnim(transform_.modelId, (int)ANIM_TYPE::HASWEAPON, -1, false);
 
-   // 立っているアニメーションのブレンド率をセット
-   MV1SetAttachAnimBlendRate(transform_.modelId, legsAnimId_, 1.0f);
+	// 立っているアニメーションのブレンド率をセット
+	MV1SetAttachAnimBlendRate(transform_.modelId, legsAnimId_, 1.0f);
 
-   // 手を前に出しているアニメーションのブレンド率をセット
-   MV1SetAttachAnimBlendRate(transform_.modelId, armAnimId_, 0.0f);
-
-   // 初期状態をIDLEに設定
-   ChangeState(STATE::IDLE);
+	// 手を前に出しているアニメーションのブレンド率をセット
+	MV1SetAttachAnimBlendRate(transform_.modelId, armAnimId_, 0.0f);
 }
 
 void Player::Update(void)
@@ -146,18 +134,27 @@ void Player::Update(void)
 		return; // ヒットストップ中は処理を止める
 	}
 
-	// 関数ポインタ更新
-	stateUpdate_();
+	// スロー解除
+	if (isSlow_) 
+	{
+		slowTimer_ -= SceneManager::GetInstance().GetDeltaTime();
+		if (slowTimer_ <= 0.0f)
+		{
+			SceneManager::GetInstance().SetTime(1.0f); // 通常速度に戻す
+			isSlow_ = false;
+		}
+	}
 
-	// モデル情報更新
+	// 通常処理
+	// プレイヤーの更新
 	transform_.Update();
 
 	// アニメーションの更新
 	animationController_->Update();
-	
+
 	// 腰のフレーム位置を取得し続ける
 	waistPos_ = MV1GetFramePosition(transform_.modelId, waistFrame_);
-	
+
 	// 左手のフレーム位置を取得し続ける
 	rightHandPos_ = MV1GetFramePosition(transform_.modelId, rightHandFrame_);
 
@@ -165,19 +162,21 @@ void Player::Update(void)
 	isGrounded_ = false;
 	CalculateGravity();
 
-    // 移動量の初期化
-    moveDir_ = Utility::VECTOR_ZERO;
-    movePow_ = Utility::VECTOR_ZERO;
+	// 移動量の初期化
+	moveDir_ = Utility::VECTOR_ZERO;
+	movePow_ = Utility::VECTOR_ZERO;
 
 	// プレイヤーの移動制御
 	ProcessInput();
 	ProcessDodge();
 
-    // 回転させる
-    transform_.quaRot = playerRotY_;	
+	// 回転させる
+	transform_.quaRot = playerRotY_;
 
 	// 武器の位置をプレイヤーの右手に設定
 	weapon_->GameUpdate(transform_);
+
+
 
 }
 
@@ -185,7 +184,7 @@ void Player::Draw(void)
 {
 	// プレイヤーの描画
 	MV1DrawModel(transform_.modelId);
-	
+
 	// 武器の描画
 	weapon_->Draw();
 }
@@ -203,11 +202,11 @@ void Player::ProcessInput(void)
 	// 攻撃アニメーション中は他の入力を受け付けないようにする
 	if (isAttack_)
 	{
-		
+
 		weapon_->StartEffect();
 		// アニメーションが終わったか判定
 		if (animationController_->IsEndBlendingPlayAnimation("SMASH") ||
-			animationController_->IsEndBlendingPlayAnimation("HIGHTIME")||
+			animationController_->IsEndBlendingPlayAnimation("HIGHTIME") ||
 			animationController_->IsEndBlendingPlayAnimation("FIRST_COMBO"))
 		{
 			isAttack_ = false;
@@ -225,7 +224,7 @@ void Player::ProcessInput(void)
 	bool nowBackPressed = ins.IsPressed(InputManager::ACTION::MOVE_BACK);
 
 	// 後方入力の立ち上がり検出
-	if (nowBackPressed && !preBackPressed_) 
+	if (nowBackPressed && !preBackPressed_)
 	{
 		// カウント開始
 		backInputFrame_ = 0;
@@ -233,7 +232,7 @@ void Player::ProcessInput(void)
 	preBackPressed_ = nowBackPressed;
 
 	// カウント中ならフレームを進める
-	if (backInputFrame_ >= 0) 
+	if (backInputFrame_ >= 0)
 	{
 		backInputFrame_++;
 		// フレームを超えたらリセット
@@ -244,7 +243,7 @@ void Player::ProcessInput(void)
 	}
 
 	// 受付フレーム以内に同時押しでSMASH発動
-	if (backInputFrame_ > 0 && backInputFrame_ <= 15) 
+	if (backInputFrame_ > 0 && backInputFrame_ <= 15)
 	{
 		if (ins.IsPressed(InputManager::ACTION::MOVE_FORWARD) &&
 			ins.IsPressed(InputManager::ACTION::ATTACK))
@@ -271,7 +270,7 @@ void Player::ProcessInput(void)
 
 	if (readyHighTime_ && nowForwardPressed && ins.IsPressed(InputManager::ACTION::ATTACK))
 	{
-		ChangeState(STATE::HIGHTIME);
+		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::HIGHTIME]);
 		currentAnimType_ = ANIM_TYPE::HIGHTIME;
 		isAttack_ = true;
 		moveForwardCount_ = 0;
@@ -437,24 +436,16 @@ void Player::SetPos(const VECTOR& pos)
 	transform_.pos = pos;
 }
 
+void Player::StartSlow(float time, float speed)
+{
+	SceneManager::GetInstance().SetTime(speed); // 例: 0.2fでスロー
+	slowTimer_ = time;
+	isSlow_ = true;
+}
+
 bool Player::IsAttack() const
 {
 	return isAttack_;
-}
-
-void Player::ChangeState(STATE state)
-{
-	preState_ = state_;
-
-	state_ = state;
-
-	stateChange_[state_]();
-
-	preAnimationKey_ = animationKey_;
-
-	animationKey_ = ANIM_DATA_KEY[(int)state];
-
-	animationController_->ChangeAnimation(animationKey_);
 }
 
 void Player::InitAnimation(void)
@@ -466,7 +457,7 @@ void Player::InitAnimation(void)
 	// IDLE状態
 	animationController_->Add("IDLE", path + "Idle.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_IDLE), true, 0, false);
-  
+
 	// 移動
 	animationController_->Add("WALK", path + "Walk.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_WALK), true, 0, false);
@@ -474,7 +465,7 @@ void Player::InitAnimation(void)
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_RUN), true, 0, false);
 	animationController_->Add("DASH", path + "Dash.mv1",
 		0.0f, FAST_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_DASH), true, 0, false);
-	
+
 	// 攻撃
 	animationController_->Add("HIGHTIME", path + "HighTime.mv1",
 		0.0f, FAST_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_HIGH_TIME), false, 0, false);
@@ -505,16 +496,16 @@ void Player::BlendAnimation(void)
 	// 両方ROOT以下ノーブレンド
 	MV1SetAttachAnimBlendRateToFrame(transform_.modelId, legsAnimId_, 3, 0.0f, true);
 	MV1SetAttachAnimBlendRateToFrame(transform_.modelId, armAnimId_, 33, 0.0f, true);
-	
+
 	// ROOTと背骨0は、IDLE 100%
 	MV1SetAttachAnimBlendRateToFrame(transform_.modelId, legsAnimId_, 3, 1.0f, false);
 	MV1SetAttachAnimBlendRateToFrame(transform_.modelId, armAnimId_, 33, 1.0f, false);
 	MV1SetAttachAnimBlendRateToFrame(transform_.modelId, legsAnimId_, 4, 1.0f, false);
 	MV1SetAttachAnimBlendRateToFrame(transform_.modelId, armAnimId_, 33, 1.0f, false);
-	
+
 	// 上半身
 	MV1SetAttachAnimBlendRateToFrame(transform_.modelId, armAnimId_, 33, 1.0f, true);
-	
+
 	// 下半身
 	MV1SetAttachAnimBlendRateToFrame(transform_.modelId, legsAnimId_, 42, 1.0f, true);
 	MV1SetAttachAnimBlendRateToFrame(transform_.modelId, legsAnimId_, 47, 1.0f, true);
@@ -539,126 +530,53 @@ void Player::BlendAnimation(void)
 
 void Player::DisableAnimMovePow(void)
 {
-    // 対象フレームのローカル行列を初期値にリセット
-    MV1ResetFrameUserLocalMatrix(transform_.modelId, frameNo_);
+	// 対象フレームのローカル行列を初期値にリセット
+	MV1ResetFrameUserLocalMatrix(transform_.modelId, frameNo_);
 
-    // 対象フレームのローカル行列(大きさ、回転、位置)を取得
-    auto mat = MV1GetFrameLocalMatrix(transform_.modelId, frameNo_);
-    auto mScl = MGetSize(mat);
-    auto mRot = MGetRotElem(mat);
-    auto mPos = MGetTranslateElem(mat);
+	// 対象フレームのローカル行列(大きさ、回転、位置)を取得
+	auto mat = MV1GetFrameLocalMatrix(transform_.modelId, frameNo_);
+	auto mScl = MGetSize(mat);
+	auto mRot = MGetRotElem(mat);
+	auto mPos = MGetTranslateElem(mat);
 
-    // 大きさ、回転、位置をローカル座標に戻す
-    MATRIX mix = MGetIdent();
-    mix = MMult(mix, MGetScale(mScl));	// 大きさ
-    mix = MMult(mix, mRot);				// 回転
+	// 大きさ、回転、位置をローカル座標に戻す
+	MATRIX mix = MGetIdent();
+	mix = MMult(mix, MGetScale(mScl));	// 大きさ
+	mix = MMult(mix, mRot);				// 回転
 
-    // 調整したローカル座標を行列に設定
-    mix = MMult(mix, MGetTranslate({ 0.0f,79.0f,0.0f }));
+	// 調整したローカル座標を行列に設定
+	mix = MMult(mix, MGetTranslate({ 0.0f,79.0f,0.0f }));
 
-    // 移動値を無効化
-    MV1SetFrameUserLocalMatrix(transform_.modelId, frameNo_, mix);
+	// 移動値を無効化
+	MV1SetFrameUserLocalMatrix(transform_.modelId, frameNo_, mix);
 
 }
 
 void Player::SetGoalRotate(double rotRad)
 {
-    VECTOR cameraRot = mainCamera.GetAngles();
-    Quaternion axis = Quaternion::AngleAxis((double)cameraRot.y + rotRad, Utility::AXIS_Y);
+	VECTOR cameraRot = mainCamera.GetAngles();
+	Quaternion axis = Quaternion::AngleAxis((double)cameraRot.y + rotRad, Utility::AXIS_Y);
 
-    // 現在設定されている回転との角度差を取る
-    double angleDiff = Quaternion::Angle(axis, goalQuaRot_);
+	// 現在設定されている回転との角度差を取る
+	double angleDiff = Quaternion::Angle(axis, goalQuaRot_);
 
-    // しきい値
-    if (angleDiff > 0.1)
-    {
-        stepRotTime_ = TIME_ROT;
-    }
+	// しきい値
+	if (angleDiff > 0.1)
+	{
+		stepRotTime_ = TIME_ROT;
+	}
 
-    goalQuaRot_ = axis;
+	goalQuaRot_ = axis;
 }
 
 void Player::Rotate(void)
 {
-    stepRotTime_ -= SceneManager::GetInstance().GetDeltaTime();
+	stepRotTime_ -= SceneManager::GetInstance().GetDeltaTime();
 
-    // 回転の球面補間
-    playerRotY_ = Quaternion::Slerp(
-        playerRotY_, goalQuaRot_, (TIME_ROT - stepRotTime_) / TIME_ROT);
+	// 回転の球面補間
+	playerRotY_ = Quaternion::Slerp(
+		playerRotY_, goalQuaRot_, (TIME_ROT - stepRotTime_) / TIME_ROT);
 }
-
-void Player::ChangeIdle(void)
-{
-	stateUpdate_ = std::bind(&Player::UpdateIdle, this);
-}
-
-void Player::ChangeMove(void)
-{
-	stateUpdate_ = std::bind(&Player::UpdateMove, this);
-}
-
-void Player::ChangeFirstAttack(void)
-{
-	stateUpdate_ = std::bind(&Player::UpdateFirstAttack, this);
-}
-
-void Player::ChangeSmash(void)
-{
-	stateUpdate_ = std::bind(&Player::UpdateSmash, this);
-}
-
-void Player::ChangeHightime(void)
-{
-	stateUpdate_ = std::bind(&Player::UpdateHightime, this);
-}
-
-void Player::ChangeDodge(void)
-{
-	stateUpdate_ = std::bind(&Player::UpdateDodge, this);
-}
-
-void Player::ChangeDamage(void)
-{
-	stateUpdate_ = std::bind(&Player::UpdateDamage, this);
-}
-
-void Player::ChangeDeath(void)
-{
-	stateUpdate_ = std::bind(&Player::UpdateDeath, this);
-}
-
-void Player::UpdateIdle(void)
-{
-}
-
-void Player::UpdateMove(void)
-{
-}
-
-void Player::UpdateFirstAttack(void)
-{
-}
-
-void Player::UpdateSmash(void)
-{
-}
-
-void Player::UpdateHightime(void)
-{
-}
-
-void Player::UpdateDodge(void)
-{
-}
-
-void Player::UpdateDamage(void)
-{
-}
-
-void Player::UpdateDeath(void)
-{
-}
-
 //
 //void Player::CalculateGravity(void)
 //{

@@ -86,6 +86,9 @@ public:
 	// プレイヤーの位置をコライダと合わせる
 	void SetPos(const VECTOR& pos)override;
 
+	// スローモーション処理
+	void StartSlow(float time,float speed);
+
 	// 攻撃状態かどうか
 	bool IsAttack() const;
 
@@ -163,6 +166,10 @@ private:
 	// ヒットストップ
 	float hitStopTimer_;
 
+	// スローモーション用
+	float slowTimer_;
+	bool isSlow_;
+
 	// 回転
 	Quaternion playerRotY_;
 	Quaternion goalQuaRot_;
@@ -208,5 +215,4 @@ private:
 	void UpdateDodge(void);
 	void UpdateDamage(void);
 	void UpdateDeath(void);
-
 };

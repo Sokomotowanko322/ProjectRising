@@ -48,7 +48,13 @@ private:
 	// 衝突判定
 	std::unique_ptr<ColliderManager> colMng_;
 
+	// ゲーム内BGM
 	int gameBgm_;
 
+	// ゲーム内時間
+	float gameTime_;
+
+	// クリア判定
+	bool isClear_;
 };
 

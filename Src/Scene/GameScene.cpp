@@ -57,9 +57,15 @@ void GameScene::Init(void)
 	mainCamera.SetFollow(&player_->GetTransform());
 	mainCamera.ChangeMode(Camera::MODE::FOLLOW);
 
+	// ƒQ[ƒ€“àBGM
 	gameBgm_ = resMng_.Load(ResourceManager::SRC::SOUND_TITLEBGM).handleId_;
-
 	PlaySoundMem(gameBgm_, DX_PLAYTYPE_BACK);
+
+	// ƒQ[ƒ€“àŽžŠÔ
+	gameTime_ = 0.0f;
+
+	// ƒNƒŠƒA”»’è
+	isClear_ = false;
 }
 
 void GameScene::AddColliders(void)
@@ -144,6 +150,13 @@ void GameScene::Update(void)
 		count_ = BLINK_RATE;*/
 		SceneManager::GetInstance().ChangeScene(SceneManager::SCENE_ID::RESULT);
 	}
+
+	// ƒNƒŠƒA‚Ü‚ÅŽžŠÔ‚ð‰ÁŽZ‚µ‚Ä‚¢‚­
+	if (!isClear_)
+	{
+		gameTime_ += SceneManager::GetInstance().GetDeltaTime();
+	}
+
 	// ”wŒi’Ç]
 	skyDome_->Update();
 	
@@ -156,8 +169,8 @@ void GameScene::Update(void)
 	// “G‚ÌXV
 	normalEnemy_->Update();
 
+	// ƒRƒ‰ƒCƒ_XV
 	colMng_->Update();
-	
 }
 
 void GameScene::Draw(void)

@@ -439,7 +439,8 @@ void ColliderManager::HitAttackToDamage(const ColliderData& self, const Collider
     }
     if (!victim || !player) return;
 
-    if (auto enemy = dynamic_cast<NormalEnemy*>(victim)) {
+    if (auto enemy = dynamic_cast<NormalEnemy*>(victim)) 
+    {
         // リアクションテーブル実行
         auto animType = player->GetCurrentAnimType();
         auto it = reactionTable_.find(animType);
@@ -448,6 +449,13 @@ void ColliderManager::HitAttackToDamage(const ColliderData& self, const Collider
             player->HitEffect(enemy->GetPos());
             // ヒットストップ・カメラシェイク
             player->HitStop(0.2f); // ← Playerに通知
+            // 攻撃種別ごとにスローモーション
+            if (animType == Player::ANIM_TYPE::SMASH) {
+                player->StartSlow(0.3f, 0.2f);
+            }
+            else if (animType == Player::ANIM_TYPE::HIGHTIME) {
+                player->StartSlow(0.2f, 0.3f);
+            }
             it->second(enemy, dir);
         }
         enemy->Damage(2);

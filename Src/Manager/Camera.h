@@ -159,6 +159,10 @@ public:
 	/// </summary>
 	void CameraShake(void);
 
+	// カメラ演出
+	void SetZoom(float fov, float duration);
+	void SetAngle(const VECTOR& targetPos, float duration);
+	
 private:
 
 	// カメラが追従対象とするTransform
@@ -220,6 +224,30 @@ private:
 
 	//成功時カメラの経過時間
 	float successCameraTimeStep_;
+
+	// 現在のFOV
+	float zoomStartFov_ = 45.0f;
+
+	// 目標FOV
+	float zoomTargetFov_ = 45.0f;
+
+	// 補間残り時間
+	float zoomLerpTime_ = 0.0f;       
+
+	// 補間総時間
+	float zoomLerpDuration_ = 0.0f;   
+
+	// 現在の注視点
+	VECTOR angleStartTarget_;          
+
+	// 目標注視点
+	VECTOR angleTarget_;
+
+	// 補間残り時間
+	float angleLerpTime_ = 0.0f;
+
+	// 補間総時間
+	float angleLerpDuration_ = 0.0f;
 
 	//クリア時のカメラワークが終わった際に実行する関数
 	std::function<void(void)> successCameraEnd_;
