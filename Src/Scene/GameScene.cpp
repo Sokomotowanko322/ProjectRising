@@ -151,6 +151,16 @@ void GameScene::Update(void)
 		SceneManager::GetInstance().ChangeScene(SceneManager::SCENE_ID::RESULT);
 	}
 
+	// 必殺演出の発動
+	if (insI.IsPressed(InputManager::ACTION::SPECIAL_ATTACK))
+	{
+		camera_.StartSpecialCamera(
+			player_->GetCenterPos(),
+			normalEnemy_->GetCenterPos(),
+			5.0f
+		);
+	}
+
 	// クリアまで時間を加算していく
 	if (!isClear_)
 	{

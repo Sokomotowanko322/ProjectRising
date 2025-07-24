@@ -27,6 +27,7 @@ public:
 		FOLLOW_FIX,		//角度変化なし
 		FOLLOW_MOUSE,
 		SUCCESSFUL,
+		SPECIAL
 	};
 
 	Camera(void);
@@ -160,9 +161,9 @@ public:
 	void CameraShake(void);
 
 	// カメラ演出
-	void SetZoom(float fov, float duration);
-	void SetAngle(const VECTOR& targetPos, float duration);
-	
+	void StartSpecialCamera(const VECTOR& playerPos, const VECTOR& enemyPos, float duration);
+	bool IsSpecialCameraActive() const;
+
 private:
 
 	// カメラが追従対象とするTransform
@@ -249,6 +250,13 @@ private:
 	// 補間総時間
 	float angleLerpDuration_ = 0.0f;
 
+	// 必殺技演出時のカメラパラメータ
+	float specialTimeStep_;
+	float specialDuration_;
+	VECTOR specialStartEye_;
+	VECTOR specialPlayerPos_;
+	VECTOR specialEnemyPos_;
+
 	//クリア時のカメラワークが終わった際に実行する関数
 	std::function<void(void)> successCameraEnd_;
 
@@ -288,20 +296,22 @@ private:
 	//状態遷移
 	std::unordered_map<MODE, std::function<void(void)>> modeChanges_;
 	void ChangeFixedPoint(void);		//定点
-	void ChangeFree(void);		//自由視点
-	void ChangeFollow(void);		//自由視点追従
-	void ChangeFollowFix(void);		//定点追従
+	void ChangeFree(void);				//自由視点
+	void ChangeFollow(void);			//自由視点追従
+	void ChangeFollowFix(void);			//定点追従
 	void ChangeFollowMouse(void);		//マウス追従
 	void ChangeSuccessful(void);		//クリア時カメラ演出
+	void ChangeSpecial(void);			//必殺時時カメラ演出
 
 	// モード別更新ステップ
 	std::function<void(void)> modeUpdate_;
-	void UpdateFixedPoint(void);	//定点	
-	void UpdateFree(void);		//自由視点
-	void UpdateFollow(void);		//自由視点追従
-	void UpdateFollowFix(void);		//定点追従
+	void UpdateFixedPoint(void);		//定点	
+	void UpdateFree(void);				//自由視点
+	void UpdateFollow(void);			//自由視点追従
+	void UpdateFollowFix(void);			//定点追従
 	void UpdateFollowMouse(void);		//マウス追従
 	void UpdateSuccessful(void);		//クリア時カメラ演出
+	void UpdateSpecial(void);			//必殺時カメラ演出
 
 	// モード別描画前カメラ設定ステップ
 	std::function<void(void)> setBeforeDrawMode_;
@@ -311,6 +321,7 @@ private:
 	void SetBeforeDrawFollowFix(void);			//定点追従	
 	void SetBeforeDrawFollowMouse(void);		//マウス追従
 	void SetBeforeDrawSuccessful(void);		//クリア時カメラ演出
+	void SetBeforeDrawSpecial(void);		//クリア時カメラ演出
 
 	//デバッグ用
 	void DrawDebug(void);

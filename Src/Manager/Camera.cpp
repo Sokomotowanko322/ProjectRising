@@ -100,7 +100,7 @@ Camera::Camera(void)
 	modeChanges_.emplace(MODE::FOLLOW_FIX, bind(&Camera::ChangeFollowFix, this));
 	modeChanges_.emplace(MODE::FOLLOW_MOUSE, bind(&Camera::ChangeFollowMouse, this));
 	modeChanges_.emplace(MODE::SUCCESSFUL, bind(&Camera::ChangeSuccessful, this));
-
+	modeChanges_.emplace(MODE::SPECIAL, bind(&Camera::ChangeSpecial, this));
 }
 
 Camera::~Camera(void)
@@ -116,7 +116,8 @@ void Camera::Init(void)
 	//colliderController_ = make_unique<ColliderController>();
 	//colliderController_->SetCollision(OBJECT_TYPE::STAGE);
 	localPosMouseFollow_ = LOCAL_POS_TARGET_CAMERA_MOUSEFOLLOW;
-
+	specialTimeStep_ = 0.0f;
+	specialDuration_ = 2.0f;
 	ChangeMode(MODE::FIXED_POINT);
 
 }
@@ -127,37 +128,7 @@ void Camera::Update(void)
 	modeUpdate_();
 	CameraShake();
 
-	// FOV補間部分（Update内）
-	if (zoomLerpTime_ > 0.0f)
-	{
-		zoomLerpTime_ -= TimeManager::GetInstance().GetDeltaTime();
-		float t = 1.0f - (zoomLerpTime_ / zoomLerpDuration_);
-		float fov = zoomStartFov_ + (zoomTargetFov_ - zoomStartFov_) * t;
-		currentFov_ = fov;
-		SetCameraPerspective(currentFov_); // DxLibのFOV設定
-		if (zoomLerpTime_ <= 0.0f)
-		{
-			currentFov_ = zoomTargetFov_;
-			SetCameraPerspective(currentFov_);
-		}
-	}
-
-	// 注視点補間
-	if (angleLerpTime_ > 0.0f)
-	{
-		angleLerpTime_ -= TimeManager::GetInstance().GetDeltaTime();
-		float t = 1.0f - (angleLerpTime_ / angleLerpDuration_);
-		targetPos_ = {
-			angleStartTarget_.x + (angleTarget_.x - angleStartTarget_.x) * t,
-			angleStartTarget_.y + (angleTarget_.y - angleStartTarget_.y) * t,
-			angleStartTarget_.z + (angleTarget_.z - angleStartTarget_.z) * t
-		};
-		if (angleLerpTime_ <= 0.0f)
-		{
-			targetPos_ = angleTarget_;
-		}
-	}
-
+	
 }
 
 void Camera::SetBeforeDraw(void)
@@ -245,21 +216,20 @@ void Camera::CameraShake(void)
 
 }
 
-void Camera::SetZoom(float fov, float duration)
+void Camera::StartSpecialCamera(const VECTOR& playerPos, const VECTOR& enemyPos, float duration)
 {
-	// 現在のFOVを取得
-	zoomStartFov_ = GetCameraFov();
-	zoomTargetFov_ = fov;
-	zoomLerpTime_ = duration;
-	zoomLerpDuration_ = duration;
+	specialTimeStep_ = 0.0f;
+	specialDuration_ = duration;
+	specialPlayerPos_ = playerPos;
+	specialEnemyPos_ = enemyPos;
+	specialStartEye_ = pos_;  // 現在位置から始める
+
+	ChangeMode(MODE::SPECIAL);
 }
 
-void Camera::SetAngle(const VECTOR& targetPos, float duration)
+bool Camera::IsSpecialCameraActive() const
 {
-	angleStartTarget_ = targetPos_;
-	angleTarget_ = targetPos;
-	angleLerpTime_ = duration;
-	angleLerpDuration_ = duration;
+	return mode_ == MODE::SPECIAL;
 }
 
 void Camera::SetDefQuaRot(const Quaternion& qua)
@@ -628,6 +598,12 @@ void Camera::ChangeSuccessful(void)
 
 }
 
+void Camera::ChangeSpecial(void)
+{
+	setBeforeDrawMode_ = bind(&Camera::SetBeforeDrawSpecial, this);
+	modeUpdate_ = bind(&Camera::UpdateSpecial, this);
+}
+
 void Camera::UpdateFixedPoint(void)
 {
 
@@ -766,6 +742,41 @@ void Camera::UpdateSuccessful(void)
 
 }
 
+void Camera::UpdateSpecial(void)
+{
+	const float delta = 1.0f / 60.0f;
+	specialTimeStep_ += delta;
+	float t = specialTimeStep_ / specialDuration_;
+
+	if (t < 0.2f) {
+		// 1. 背後からズームイン（Zを-zoom→-60などにしてみる）
+		float zoom = 60.0f - 40.0f * (t / 0.2f); // より遠くから
+		pos_ = VAdd(specialPlayerPos_, VGet(0, 12, -zoom)); // Yも高めに
+		targetPos_ = VAdd(
+			VScale(specialPlayerPos_, 0.7f),
+			VScale(specialEnemyPos_, 0.3f)
+		); // プレイヤー寄りを注視
+	}
+	else if (t < 0.7f) {
+		// 2. プレイヤーの周囲を回転（radiusやYを大きく）
+		float angle = (t - 0.2f) / 0.5f * DX_PI_F * 1.5f;
+		float radius = 18.0f; // より外側
+		pos_ = VAdd(specialPlayerPos_, VGet(sinf(angle) * radius, 10, -cosf(angle) * radius));
+		targetPos_ = VAdd(
+			VScale(specialPlayerPos_, 0.5f),
+			VScale(specialEnemyPos_, 0.5f)
+		);
+	}
+	else if (t < 1.0f) {
+		// 3. 敵の背後からプレイヤーを映す
+		pos_ = VAdd(specialEnemyPos_, VGet(0, 12, 24)); // より高く遠く
+		targetPos_ = specialPlayerPos_;
+	}
+	else {
+		ChangeMode(MODE::FOLLOW);
+	}
+}
+
 void Camera::SetBeforeDrawFixedPoint(void)
 {
 
@@ -832,6 +843,13 @@ void Camera::SetBeforeDrawSuccessful(void)
 		targetPos_,
 		cameraUp_
 	);
+}
+
+void Camera::SetBeforeDrawSpecial(void)
+{
+	SetCameraPositionAndTarget_UpVecY(
+		pos_, 
+		targetPos_);
 }
 
 void Camera::DrawDebug(void)

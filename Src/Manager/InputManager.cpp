@@ -114,7 +114,7 @@ InputManager::InputManager(void)
         //{InputType::MOUSE,MOUSE_INPUT_MIDDLE},
     };
 
-    inputActionMaps_[ACTION::PULL] =
+    inputActionMaps_[ACTION::SPECIAL_ATTACK] =
     {
         {InputType::KEYBOARD,KEY_INPUT_G},
         {InputType::GAMEPAD,(int)JOYPAD_BTN::ZR_TRIGGER},

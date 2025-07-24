@@ -155,7 +155,7 @@ public:
 		BLOCK,		//ÉKÅ[Éh
 		DODGE,		//âÒî
 		RUN,		//ëñÇÈ
-		PULL,		//
+		SPECIAL_ATTACK,		//
 		DRAW_UNDRAW,		//
 		CAST,		//
 		MOVE_PAD,		//
