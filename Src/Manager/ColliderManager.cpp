@@ -1,16 +1,16 @@
 #include <DxLib.h>
 #include "../Utility/CollisionUtility.h"
 #include "../Object/Unit/Player.h"
-#include "../Object/Unit/NormalEnemy.h"
+#include "../Object/Unit/MidBoss.h"
 #include "../Object/Weapon.h"
 #include "ColliderManager.h"
 
 // プレイヤー攻撃アニメ種別→敵のリアクション
-static const std::unordered_map<Player::ANIM_TYPE, std::function<void(NormalEnemy*, const VECTOR&)>> reactionTable_ = 
+static const std::unordered_map<Player::ANIM_TYPE, std::function<void(MidBoss*, const VECTOR&)>> reactionTable_ = 
 {
-    { Player::ANIM_TYPE::SMASH,      [](NormalEnemy* e, const VECTOR& dir) { e->ChangeState(NormalEnemy::STATE::BLOW_AWAY); } },
-    { Player::ANIM_TYPE::FIRST_COMBO,[](NormalEnemy* e, const VECTOR& dir) { e->ChangeState(NormalEnemy::STATE::FLINCH); } },
-    { Player::ANIM_TYPE::HIGHTIME,   [](NormalEnemy* e, const VECTOR& dir) { e->ChangeState(NormalEnemy::STATE::BLOW); } },
+    { Player::ANIM_TYPE::SMASH,      [](MidBoss* e, const VECTOR& dir) { e->ChangeState(MidBoss::STATE::BLOW_AWAY); } },
+    { Player::ANIM_TYPE::FIRST_COMBO,[](MidBoss* e, const VECTOR& dir) { e->ChangeState(MidBoss::STATE::FLINCH); } },
+    { Player::ANIM_TYPE::HIGHTIME,   [](MidBoss* e, const VECTOR& dir) { e->ChangeState(MidBoss::STATE::BLOW); } },
 };
 
 void ColliderManager::RegisterActor(const std::shared_ptr<ActorBase>& actor)
@@ -81,7 +81,7 @@ bool ColliderManager::IsWeaponEnemyPair(const ColliderData& weaponCol, const Col
             }
         }
     }
-    return dynamic_cast<Weapon*>(weaponActor) && dynamic_cast<NormalEnemy*>(enemyActor);
+    return dynamic_cast<Weapon*>(weaponActor) && dynamic_cast<MidBoss*>(enemyActor);
 }
 
 void ColliderManager::UpdateColliders()
@@ -94,7 +94,7 @@ void ColliderManager::UpdateColliders()
         int actorId = actor->GetTransform().modelId;
         Player* player = dynamic_cast<Player*>(actor.get());
         Weapon* weapon = dynamic_cast<Weapon*>(actor.get());
-        NormalEnemy* enemy = dynamic_cast<NormalEnemy*>(actor.get());
+        MidBoss* enemy = dynamic_cast<MidBoss*>(actor.get());
 
         for (auto& col : colliders_)
         {
@@ -215,7 +215,7 @@ void ColliderManager::CheckCollisions() {
                                 }
                             }
                         }
-                        if (auto enemy = dynamic_cast<NormalEnemy*>(victim)) {
+                        if (auto enemy = dynamic_cast<MidBoss*>(victim)) {
                             int enemyId = enemy->GetTransform().modelId;
                             if (hitCount_ < 20 && hitEnemyIds_.count(enemyId) == 0) {
                                 HitAttackToDamage(a, b, player);
@@ -257,7 +257,7 @@ void ColliderManager::CheckCollisions() {
                                 }
                             }
                         }
-                        if (auto enemy = dynamic_cast<NormalEnemy*>(victim)) {
+                        if (auto enemy = dynamic_cast<MidBoss*>(victim)) {
                             int enemyId = enemy->GetTransform().modelId;
                             if (hitCount_ < 20 && hitEnemyIds_.count(enemyId) == 0) {
                                 HitAttackToDamage(b, a, player);
@@ -439,7 +439,7 @@ void ColliderManager::HitAttackToDamage(const ColliderData& self, const Collider
     }
     if (!victim || !player) return;
 
-    if (auto enemy = dynamic_cast<NormalEnemy*>(victim)) 
+    if (auto enemy = dynamic_cast<MidBoss*>(victim)) 
     {
         // リアクションテーブル実行
         auto animType = player->GetCurrentAnimType();

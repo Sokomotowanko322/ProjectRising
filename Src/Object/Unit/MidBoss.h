@@ -5,7 +5,7 @@
 
 class Player;
 
-class NormalEnemy : public ActorBase
+class MidBoss : public ActorBase
 {
 public:
 
@@ -46,8 +46,8 @@ public:
 	};
 
 	// コンストラクタ
-	NormalEnemy(std::weak_ptr<Player> player);
-	~NormalEnemy();
+	MidBoss(std::weak_ptr<Player> player);
+	~MidBoss();
 	
 	// 初期化
 	void Init(void);

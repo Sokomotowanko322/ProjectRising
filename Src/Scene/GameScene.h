@@ -5,7 +5,7 @@ class ColliderManager;
 class SkyDome;
 class Stage;
 class Player;
-class NormalEnemy;
+class MidBoss;
 
 class GameScene : public SceneBase
 {
@@ -37,7 +37,7 @@ private:
 	std::shared_ptr<Player> player_;
 	
 	// 通常の敵
-	std::shared_ptr<NormalEnemy> normalEnemy_;
+	std::shared_ptr<MidBoss> midBoss_;
 
 	// スカイドーム
 	std::unique_ptr<SkyDome> skyDome_;

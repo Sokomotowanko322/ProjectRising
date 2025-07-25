@@ -8,7 +8,7 @@
 #include "../../Controller/AnimationController.h"
 #include "../../Utility/Utility.h"
 #include "../../Object/Weapon.h"
-#include "../../Object/Unit/NormalEnemy.h"
+#include "../../Object/Unit/MidBoss.h"
 #include "Player.h"
 
 // ƒ‚ƒfƒ‹‚ÌHips
@@ -54,6 +54,7 @@ goalQuaRot_(Quaternion()),
 playerRotY_(Quaternion()),
 isAttack_(false),
 isInvincible_(false),
+isDodging_(false),
 isHitStop_(false),
 readyHighTime_(false),
 preForwardPressed_(false),
@@ -294,14 +295,14 @@ void Player::ProcessInput(void)
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::DASH]);
 		transform_.pos = VAdd(transform_.pos, movePow_);
 	}
-	else if (!Utility::EqualsVZero(moveDir_))
+	else if (!Utility::EqualsVZero(moveDir_) && !isDodging_)
 	{
 		movePow_ = VScale(moveDir_, SPEED_MOVE);
 		SetGoalRotate(rotRad_);
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::WALK]);
 		transform_.pos = VAdd(transform_.pos, movePow_);
 	}
-	else
+	else if(!isDodging_)
 	{
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::IDLE]);
 	}
@@ -325,10 +326,12 @@ void Player::ProcessDodge(void)
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::DODGE]);
 		currentAnimType_ = ANIM_TYPE::DODGE;
 		isInvincible_ = true;
+		isDodging_ = true;
 		return;
 	}
-	if (animationController_->IsEndBlendingPlayAnimation("DODGE"))
+	if (isDodging_ && animationController_->IsEndBlendingPlayAnimation("DODGE"))
 	{
+		isDodging_ = false;
 		isInvincible_ = false;
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::IDLE]);
 	}

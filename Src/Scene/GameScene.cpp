@@ -8,7 +8,7 @@
 #include "../Object/SkyDome.h"
 #include "../Object/Stage.h"
 #include "../Object/Unit/Player.h"
-#include "../Object/Unit/NormalEnemy.h"
+#include "../Object/Unit/MidBoss.h"
 #include "../Object/Weapon.h"
 #include "GameScene.h"
 
@@ -30,13 +30,13 @@ void GameScene::Init(void)
 	player_->Init();
 
 	// 敵の初期化
-	normalEnemy_ = std::make_shared<NormalEnemy>(player_);
-	normalEnemy_->Init();
+	midBoss_ = std::make_shared<MidBoss>(player_);
+	midBoss_->Init();
 
 	// コライダ生成
 	colMng_ = std::make_unique<ColliderManager>();
 	colMng_->RegisterActor(player_);
-	colMng_->RegisterActor(normalEnemy_);
+	colMng_->RegisterActor(midBoss_);
 	colMng_->RegisterActor(player_->GetWeapon());
 
 	// --- ここで一度WeaponのmodelIdを確認 ---
@@ -91,11 +91,11 @@ void GameScene::AddColliders(void)
 	));
 	colMng_->AddCollider(ColliderData(
 		ColliderType::Capsule,
-		normalEnemy_->GetCenterPos(),
+		midBoss_->GetCenterPos(),
 		{0.0f,5.0f,0.0f},
 		20.0f,
 		5.0f,
-		normalEnemy_->GetTransform().modelId,
+		midBoss_->GetTransform().modelId,
 		false	// 貫通しない
 	));
 
@@ -144,19 +144,19 @@ void GameScene::Update(void)
 	auto pad = insI.GetJPadState(JOYPAD_NO::PAD1);
 	insI.SetControlType(InputManager::CONTROL_TYPE::KEY);
 
-	if (insI.IsTriggered(InputManager::ACTION::PAUSE) || normalEnemy_->GetHP() == 0)
+	if (insI.IsTriggered(InputManager::ACTION::PAUSE) || midBoss_->GetHP() == 0)
 	{
 		/*PlaySoundMem(enterSe_, DX_PLAYTYPE_BACK, true);
 		count_ = BLINK_RATE;*/
 		SceneManager::GetInstance().ChangeScene(SceneManager::SCENE_ID::RESULT);
 	}
 
-	// 必殺演出の発動
+	// カメラ演出の発動
 	if (insI.IsPressed(InputManager::ACTION::SPECIAL_ATTACK))
 	{
 		camera_.StartSpecialCamera(
 			player_->GetCenterPos(),
-			normalEnemy_->GetCenterPos(),
+			midBoss_->GetCenterPos(),
 			5.0f
 		);
 	}
@@ -177,7 +177,7 @@ void GameScene::Update(void)
 	player_->Update();
 
 	// 敵の更新
-	normalEnemy_->Update();
+	midBoss_->Update();
 
 	// コライダ更新
 	colMng_->Update();
@@ -195,7 +195,7 @@ void GameScene::Draw(void)
 	player_->Draw();
 
 	// 敵描画
-	normalEnemy_->Draw();
+	midBoss_->Draw();
 
 	// コライダーの描画
 	//colMng_->DrawColliders();

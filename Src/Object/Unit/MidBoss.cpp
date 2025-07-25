@@ -6,7 +6,7 @@
 #include "../../Controller/AnimationController.h"
 #include "../../Utility/Utility.h"
 #include "../../Object/Unit/Player.h"
-#include "NormalEnemy.h"
+#include "MidBoss.h"]
 
 // モデルのHips
 char FRAME_ENEMY_HIPS[] = "mixamorig:Hips";
@@ -29,26 +29,26 @@ const float DEVIDE_STEPCOUNT = 8.0f;
 // 遠距離判定用
 const float LONG_RANGE = 70.0f;
 
-NormalEnemy::NormalEnemy(std::weak_ptr<Player> player) : ActorBase(),
+MidBoss::MidBoss(std::weak_ptr<Player> player) : ActorBase(),
 animationController_(std::make_unique<AnimationController>(transform_.modelId)),
 diff_(Utility::VECTOR_ZERO),
 rotationStep_(0.0f), frameNo_(-1),
 enemyHp_(10)
 {
 	player_ = player;
-	stateChange_[STATE::IDLE] = std::bind(&NormalEnemy::ChangeIdle, this);
-	stateChange_[STATE::WALK] = std::bind(&NormalEnemy::ChangeClose, this);
-	stateChange_[STATE::ATTACK] = std::bind(&NormalEnemy::ChangeAttack, this);
-	stateChange_[STATE::FLINCH] = std::bind(&NormalEnemy::ChangeFlinch, this);
-	stateChange_[STATE::BLOW] = std::bind(&NormalEnemy::ChangeBlow, this);
-	stateChange_[STATE::BLOW_AWAY] = std::bind(&NormalEnemy::ChangeBlowAway, this);
+	stateChange_[STATE::IDLE] = std::bind(&MidBoss::ChangeIdle, this);
+	stateChange_[STATE::WALK] = std::bind(&MidBoss::ChangeClose, this);
+	stateChange_[STATE::ATTACK] = std::bind(&MidBoss::ChangeAttack, this);
+	stateChange_[STATE::FLINCH] = std::bind(&MidBoss::ChangeFlinch, this);
+	stateChange_[STATE::BLOW] = std::bind(&MidBoss::ChangeBlow, this);
+	stateChange_[STATE::BLOW_AWAY] = std::bind(&MidBoss::ChangeBlowAway, this);
 }
 
-NormalEnemy::~NormalEnemy()
+MidBoss::~MidBoss()
 {
 }
 
-void NormalEnemy::Init(void)
+void MidBoss::Init(void)
 {
 	transform_.modelId = resMng_.LoadModelDuplicate(ResourceManager::SRC::NORMAL_ENEMY);
 	transform_.scl = ENEMY_MODEL_SCALE;
@@ -76,7 +76,7 @@ void NormalEnemy::Init(void)
 	ChangeState(STATE::IDLE);
 }
 
-void NormalEnemy::Update(void)
+void MidBoss::Update(void)
 {
 	// 関数ポインタ更新
 	stateUpdate_();
@@ -94,18 +94,18 @@ void NormalEnemy::Update(void)
 	transform_.Update();
 }
 
-void NormalEnemy::Draw(void)
+void MidBoss::Draw(void)
 {
 	// モデルの描画
 	MV1DrawModel(transform_.modelId);
 }
 
-void NormalEnemy::Damage(int damageAmount)
+void MidBoss::Damage(int damageAmount)
 {
 	enemyHp_ -= damageAmount;
 }
 
-void NormalEnemy::ChangeState(STATE state)
+void MidBoss::ChangeState(STATE state)
 {
 	preState_ = state_;
 
@@ -120,27 +120,27 @@ void NormalEnemy::ChangeState(STATE state)
 	animationController_->ChangeAnimation(animationKey_);
 }
 
-int NormalEnemy::GetHP() const
+int MidBoss::GetHP() const
 {
 	return enemyHp_;
 }
 
-VECTOR NormalEnemy::GetPos() const
+VECTOR MidBoss::GetPos() const
 {
 	return transform_.pos;
 }
 
-VECTOR NormalEnemy::GetCenterPos() const
+VECTOR MidBoss::GetCenterPos() const
 {
 	return waistPos_;
 }
 
-void NormalEnemy::SetPos(const VECTOR& pos)
+void MidBoss::SetPos(const VECTOR& pos)
 {
 	transform_.pos = pos;
 }
 
-void NormalEnemy::InitAnimation(void)
+void MidBoss::InitAnimation(void)
 {
 	std::string path = Application::PATH_MODEL + PATH_NORMALENEMY;
 	animationController_ = std::make_unique<AnimationController>(transform_.modelId);
@@ -168,7 +168,7 @@ void NormalEnemy::InitAnimation(void)
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::ENEMY_BLOW_AWAY), false, 0, false);
 }
 
-void NormalEnemy::DisableAnimMovePow(void)
+void MidBoss::DisableAnimMovePow(void)
 {
 	// 対象フレームのローカル行列を初期値にリセット
 	MV1ResetFrameUserLocalMatrix(transform_.modelId, frameNo_);
@@ -191,35 +191,35 @@ void NormalEnemy::DisableAnimMovePow(void)
 	MV1SetFrameUserLocalMatrix(transform_.modelId, frameNo_, mix);
 }
 
-void NormalEnemy::ChangeIdle(void)
+void MidBoss::ChangeIdle(void)
 {
-	stateUpdate_ = std::bind(&NormalEnemy::UpdateIdle, this);
+	stateUpdate_ = std::bind(&MidBoss::UpdateIdle, this);
 }
 
-void NormalEnemy::ChangeClose(void)
+void MidBoss::ChangeClose(void)
 {
-	stateUpdate_ = std::bind(&NormalEnemy::UpdateClose, this);
+	stateUpdate_ = std::bind(&MidBoss::UpdateClose, this);
 }
 
-void NormalEnemy::ChangeAttack(void)
+void MidBoss::ChangeAttack(void)
 {
-	stateUpdate_ = std::bind(&NormalEnemy::UpdateAttack, this);
+	stateUpdate_ = std::bind(&MidBoss::UpdateAttack, this);
 }
 
-void NormalEnemy::ChangeFlinch(void)
+void MidBoss::ChangeFlinch(void)
 {
-	stateUpdate_ = std::bind(&NormalEnemy::UpdateFlinch, this);
+	stateUpdate_ = std::bind(&MidBoss::UpdateFlinch, this);
 }
 
-void NormalEnemy::ChangeBlow(void)
+void MidBoss::ChangeBlow(void)
 {
 	// 上昇処理
 	DisableAnimMovePow();
 	transform_.pos.y += 1.0f; // 上昇量は調整してください
-	stateUpdate_ = std::bind(&NormalEnemy::UpdateBlow, this);
+	stateUpdate_ = std::bind(&MidBoss::UpdateBlow, this);
 }
 
-void NormalEnemy::ChangeBlowAway(void)
+void MidBoss::ChangeBlowAway(void)
 {
 	// 吹き飛ばし方向（モデルの背後方向）を取得
 	VECTOR back = transform_.GetBack();
@@ -232,10 +232,10 @@ void NormalEnemy::ChangeBlowAway(void)
 	transform_.pos.y += back.y * blowSpeed;
 	transform_.pos.z += back.z * blowSpeed;
 
-	stateUpdate_ = std::bind(&NormalEnemy::UpdateBlowAway, this);
+	stateUpdate_ = std::bind(&MidBoss::UpdateBlowAway, this);
 }
 
-void NormalEnemy::UpdateIdle(void)
+void MidBoss::UpdateIdle(void)
 {
 	// 回転
 	rotationStep_ += ROTATION_MIN;
@@ -294,7 +294,7 @@ void NormalEnemy::UpdateIdle(void)
 	}
 }
 
-void NormalEnemy::UpdateClose(void)
+void MidBoss::UpdateClose(void)
 {
 	// プレイヤーの座標を取得
 	auto playerPtr = player_.lock();
@@ -333,7 +333,7 @@ void NormalEnemy::UpdateClose(void)
 	SetPos(pos);
 }
 
-void NormalEnemy::UpdateAttack(void)
+void MidBoss::UpdateAttack(void)
 {
 	if (animationController_->IsEndPlayAnimation())
 	{
@@ -342,7 +342,7 @@ void NormalEnemy::UpdateAttack(void)
 	}
 }
 
-void NormalEnemy::UpdateFlinch(void)
+void MidBoss::UpdateFlinch(void)
 {
 	if (animationController_->IsEndPlayAnimation())
 	{
@@ -351,7 +351,7 @@ void NormalEnemy::UpdateFlinch(void)
 	}
 }
 
-void NormalEnemy::UpdateBlow(void)
+void MidBoss::UpdateBlow(void)
 {
 	// 少しずつ下におろしていく
 	if (transform_.pos.y >= 0.0f)
@@ -368,6 +368,6 @@ void NormalEnemy::UpdateBlow(void)
 	}
 }
 
-void NormalEnemy::UpdateBlowAway(void)
+void MidBoss::UpdateBlowAway(void)
 {
 }

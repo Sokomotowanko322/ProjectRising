@@ -2,7 +2,7 @@
 
 class AnimationController;
 class Weapon; 
-class NormalEnemy; 
+class MidBoss; 
 
 class Player : public ActorBase
 {
@@ -110,7 +110,7 @@ private:
 	std::shared_ptr<Weapon> weapon_;
 	
 	// 敵
-	std::weak_ptr<NormalEnemy> normalEnemy_;
+	std::weak_ptr<MidBoss> normalEnemy_;
 
 	// アニメーション遷移用
 	STATE state_;
@@ -179,6 +179,7 @@ private:
 	// フラグ管理
 	bool isAttack_;
 	bool isInvincible_;
+	bool isDodging_;
 	bool isHitStop_;
 	
 	// アニメーションの初期化

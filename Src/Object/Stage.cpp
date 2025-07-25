@@ -2,7 +2,7 @@
 #include "../Manager/ResourceManager.h"
 #include "../Manager/ColliderManager.h"
 #include "../Object/Unit/Player.h"
-#include "../Object/Unit/NormalEnemy.h"
+#include "../Object/Unit/MidBoss.h"
 #include "Stage.h"
 
 Stage::Stage()
