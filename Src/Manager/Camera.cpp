@@ -748,35 +748,43 @@ void Camera::UpdateSpecial(void)
 	specialTimeStep_ += delta;
 	float t = specialTimeStep_ / specialDuration_;
 
-	if (t < 0.2f) {
-		// 1. 背後からズームイン（Zを-zoom→-60などにしてみる）
-		float zoom = 60.0f - 40.0f * (t / 0.2f); // より遠くから
-		pos_ = VAdd(specialPlayerPos_, VGet(0, 12, -zoom)); // Yも高めに
-		targetPos_ = VAdd(
-			VScale(specialPlayerPos_, 0.7f),
-			VScale(specialEnemyPos_, 0.3f)
-		); // プレイヤー寄りを注視
+	if (t < 0.08f) {
+		// 1. 元のカメラ位置から少しズームアウト
+		float zoomOut = 1.0f + 0.5f * (t / 0.08f);
+		VECTOR dir = VNorm(VSub(specialStartEye_, specialPlayerPos_));
+		float dist = VSize(VSub(specialStartEye_, specialPlayerPos_));
+		pos_ = VAdd(specialPlayerPos_, VScale(dir, dist * zoomOut));
+		targetPos_ = specialPlayerPos_;
 	}
-	else if (t < 0.7f) {
-		// 2. プレイヤーの周囲を回転（radiusやYを大きく）
-		float angle = (t - 0.2f) / 0.5f * DX_PI_F * 1.5f;
-		float radius = 18.0f; // より外側
-		pos_ = VAdd(specialPlayerPos_, VGet(sinf(angle) * radius, 10, -cosf(angle) * radius));
-		targetPos_ = VAdd(
-			VScale(specialPlayerPos_, 0.5f),
-			VScale(specialEnemyPos_, 0.5f)
-		);
-	}
-	else if (t < 1.0f) {
-		// 3. 敵の背後からプレイヤーを映す
-		pos_ = VAdd(specialEnemyPos_, VGet(0, 12, 24)); // より高く遠く
+	//else if (t < 0.28f) {
+	//	// 2. プレイヤーの右下後方へカメラを移動
+	//	float lerp = (t - 0.08f) / 0.2f;
+	//	// プレイヤーのローカル軸で右下後方を計算
+	//	VECTOR right = followTransform_->GetRight();
+	//	VECTOR down = followTransform_->GetDown();
+	//	VECTOR back = followTransform_->GetBack();
+	//	VECTOR offset = VAdd(VAdd(VScale(right, 15.0f), VScale(down, 6.0f)), VScale(back, 10.0f));
+	//	VECTOR targetPos = VAdd(specialPlayerPos_, offset);
+	//	pos_ = {
+	//		specialStartEye_.x * (1.0f - lerp) + targetPos.x * lerp,
+	//		specialStartEye_.y * (1.0f - lerp) + targetPos.y * lerp,
+	//		specialStartEye_.z * (1.0f - lerp) + targetPos.z * lerp
+	//	};
+	//	targetPos_ = specialPlayerPos_;
+	//}
+	else if (t < 0.5f) {
+		// 3. 完全に右下後方から固定
+		VECTOR right = followTransform_->GetRight();
+		VECTOR down = followTransform_->GetDown();
+		VECTOR back = followTransform_->GetBack();
+		VECTOR offset = VAdd(VAdd(VScale(right, 15.0f), VScale(down, 8.0f)), VScale(back, 40.0f));
+		pos_ = VAdd(specialPlayerPos_, offset);
 		targetPos_ = specialPlayerPos_;
 	}
 	else {
 		ChangeMode(MODE::FOLLOW);
 	}
 }
-
 void Camera::SetBeforeDrawFixedPoint(void)
 {
 

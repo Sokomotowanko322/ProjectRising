@@ -98,6 +98,8 @@ void ResourceManager::Init(void)
 	resourcesMap_.emplace(SRC::PLAYER_RUN, std::move(res));
 	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Player/Anim/Dash.mv1");
 	resourcesMap_.emplace(SRC::PLAYER_DASH, std::move(res));
+	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Player/Anim/SpecialCharge.mv1");
+	resourcesMap_.emplace(SRC::PLAYER_CHARGE, std::move(res));
 	
 	// ‰ñ”ð	
 	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Player/Anim/Dodge.mv1");
@@ -110,6 +112,8 @@ void ResourceManager::Init(void)
 	resourcesMap_.emplace(SRC::PLAYER_SMASH_ATTACK, std::move(res));
 	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Player/Anim/Combo1.mv1");
 	resourcesMap_.emplace(SRC::PLAYER_FIRSTCOMBO, std::move(res));
+	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Player/Anim/SpecialAttack.mv1");
+	resourcesMap_.emplace(SRC::PLAYER_SPECIALATTACK, std::move(res));
 
 	// ‚»‚Ì‘¼
 	res = std::make_unique<Resource>(Resource::TYPE::MODEL, Application::PATH_MODEL + "Player/Anim/HasWeapon.mv1");

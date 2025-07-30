@@ -55,6 +55,8 @@ playerRotY_(Quaternion()),
 isAttack_(false),
 isInvincible_(false),
 isDodging_(false),
+isCharging_(false),
+isSpAttacking_(false),
 isHitStop_(false),
 readyHighTime_(false),
 preForwardPressed_(false),
@@ -67,7 +69,6 @@ rightHandPos_(Utility::VECTOR_ZERO),
 rotRad_(0.0f),
 hitStopTimer_(0.0f)
 {
-
 }
 
 Player::~Player()
@@ -98,7 +99,7 @@ void Player::Init(void)
 	colMng_ = std::make_unique<ColliderManager>();
 
 	// ステージとの判定用に中心を取得
-	waistFrame_ = MV1SearchFrame(transform_.modelId, "mixamorig:Head");
+	waistFrame_ = MV1SearchFrame(transform_.modelId, "mixamorig:Spine");
 
 	// 腰のフレーム位置を取得
 	waistPos_ = MV1GetFramePosition(transform_.modelId, waistFrame_);
@@ -168,17 +169,15 @@ void Player::Update(void)
 	movePow_ = Utility::VECTOR_ZERO;
 
 	// プレイヤーの移動制御
-	ProcessInput();
+	InputControl();
 	ProcessDodge();
+	ProcessSpecialAttack();
 
 	// 回転させる
 	transform_.quaRot = playerRotY_;
 
 	// 武器の位置をプレイヤーの右手に設定
 	weapon_->GameUpdate(transform_);
-
-
-
 }
 
 void Player::Draw(void)
@@ -190,7 +189,7 @@ void Player::Draw(void)
 	weapon_->Draw();
 }
 
-void Player::ProcessInput(void)
+void Player::InputControl(void)
 {
 	auto& ins = InputManager::GetInstance();
 
@@ -208,6 +207,7 @@ void Player::ProcessInput(void)
 		// アニメーションが終わったか判定
 		if (animationController_->IsEndBlendingPlayAnimation("SMASH") ||
 			animationController_->IsEndBlendingPlayAnimation("HIGHTIME") ||
+			animationController_->IsEndBlendingPlayAnimation("SPECIAL_ATTACK") ||
 			animationController_->IsEndBlendingPlayAnimation("FIRST_COMBO"))
 		{
 			isAttack_ = false;
@@ -218,6 +218,15 @@ void Player::ProcessInput(void)
 			// アニメーション終了まで遷移できなくする
 			return;
 		}
+	}
+
+	// 攻撃
+	if (ins.IsTriggered(InputManager::ACTION::ATTACK))
+	{
+		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::FIRST_COMBO]);
+		isAttack_ = true;
+		currentAnimType_ = ANIM_TYPE::FIRST_COMBO;
+		return;
 	}
 
 	// 前後方向入力の検出
@@ -306,16 +315,40 @@ void Player::ProcessInput(void)
 	{
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::IDLE]);
 	}
+}
 
-	// 攻撃
-	if (ins.IsTriggered(InputManager::ACTION::ATTACK))
+void Player::ProcessSpecialAttack(void)
+{
+	auto& ins = InputManager::GetInstance();
+
+	// 特殊攻撃
+	if (ins.IsTriggered(InputManager::ACTION::SPECIAL_ATTACK) && !isSpAttacking_ && !isAttack_)
 	{
-		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::FIRST_COMBO]);
+		isSpAttacking_ = true;
+		isCharging_ = true;
 		isAttack_ = true;
-		currentAnimType_ = ANIM_TYPE::FIRST_COMBO;
+		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::CHARGE]);
+		currentAnimType_ = ANIM_TYPE::CHARGE;
 		return;
 	}
 
+	float stepAnim = animationController_->GetAnimData(ANIM_DATA_KEY[(int)ANIM_TYPE::CHARGE]).stepAnim;
+	if (stepAnim > 76.0f)
+	{
+		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::SPECIAL_ATTACK]);
+	}
+	if (animationController_->IsEndBlendingPlayAnimation("CHARGE") && isCharging_)
+	{
+		
+	}
+	if (animationController_->IsEndBlendingPlayAnimation("SPECIAL_ATTACK"))
+	{
+		isSpAttacking_ = false;
+		isCharging_ = false;
+		currentAnimType_ = ANIM_TYPE::IDLE;
+		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::IDLE]);
+		return;
+	}
 }
 
 void Player::ProcessDodge(void)
@@ -461,6 +494,10 @@ void Player::InitAnimation(void)
 	animationController_->Add("IDLE", path + "Idle.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_IDLE), true, 0, false);
 
+	// 必殺時の待機状態
+	animationController_->Add("CHARGE", path + "SpecialCharge.mv1",
+		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_CHARGE), false, 0, false);
+
 	// 移動
 	animationController_->Add("WALK", path + "Walk.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_WALK), true, 0, false);
@@ -476,6 +513,8 @@ void Player::InitAnimation(void)
 		0.0f, FAST_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_SMASH_ATTACK), false, 0, false);
 	animationController_->Add("FIRST_COMBO", path + "Combo1.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_FIRSTCOMBO), false, 0, false);
+	animationController_->Add("SPECIAL_ATTACK", path + "SpecialAttack.mv1",
+		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_SPECIALATTACK), false, 0, false);
 
 	// 回避
 	animationController_->Add("DODGE", path + "Dodge.mv1",
@@ -580,6 +619,7 @@ void Player::Rotate(void)
 	playerRotY_ = Quaternion::Slerp(
 		playerRotY_, goalQuaRot_, (TIME_ROT - stepRotTime_) / TIME_ROT);
 }
+
 //
 //void Player::CalculateGravity(void)
 //{

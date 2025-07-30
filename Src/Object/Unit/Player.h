@@ -7,19 +7,7 @@ class MidBoss;
 class Player : public ActorBase
 {
 public:
-
-	enum class STATE
-	{
-		IDLE,
-		MOVE,
-		DODGE,
-		FIRST_COMBO,
-		SMASH,
-		HIGHTIME,
-		DAMAGE,
-		DEATH,
-	};
-
+	
 	// アニメーション種別
 	enum class ANIM_TYPE
 	{
@@ -31,6 +19,8 @@ public:
 		SMASH,
 		FIRST_COMBO,
 		DODGE,
+		CHARGE,
+		SPECIAL_ATTACK,
 		COUNTER,
 		HASWEAPON,
 		ALL
@@ -47,6 +37,8 @@ public:
 		"SMASH",
 		"FIRST_COMBO",
 		"DODGE",
+		"CHARGE",
+		"SPECIAL_ATTACK",
 		"COUNTER",
 		"HASWEAPON",
 	};
@@ -66,7 +58,8 @@ public:
 	void Draw(void) override;
 
 	// 操作
-	void ProcessInput(void);
+	void InputControl(void);
+	void ProcessSpecialAttack(void);
 	void ProcessDodge(void);
 	void MoveControl(void);
 
@@ -92,9 +85,6 @@ public:
 	// 攻撃状態かどうか
 	bool IsAttack() const;
 
-	// 状態遷移
-	void ChangeState(STATE state);
-
 	// コライダ側で代入できるようにする
 	bool isGrounded_;
 
@@ -111,10 +101,6 @@ private:
 	
 	// 敵
 	std::weak_ptr<MidBoss> normalEnemy_;
-
-	// アニメーション遷移用
-	STATE state_;
-	STATE preState_;
 
 	// STATE内に格納するキー
 	std::string animationKey_;
@@ -180,6 +166,8 @@ private:
 	bool isAttack_;
 	bool isInvincible_;
 	bool isDodging_;
+	bool isCharging_;
+	bool isSpAttacking_;
 	bool isHitStop_;
 	
 	// アニメーションの初期化
@@ -194,26 +182,4 @@ private:
 	// 回転
 	void SetGoalRotate(double rotRad);
 	void Rotate(void);
-
-	// STATEの変更、関数内で同時にUPDATEとアニメーションを呼び出す
-	std::unordered_map<STATE, std::function<void(void)>> stateChange_;
-	void ChangeIdle(void);
-	void ChangeMove(void);
-	void ChangeFirstAttack(void);
-	void ChangeSmash(void);
-	void ChangeHightime(void);
-	void ChangeDodge(void);
-	void ChangeDamage(void);
-	void ChangeDeath(void);
-
-	// 更新
-	std::function<void(void)> stateUpdate_;
-	void UpdateIdle(void);
-	void UpdateMove(void);
-	void UpdateFirstAttack(void);
-	void UpdateSmash(void);
-	void UpdateHightime(void);
-	void UpdateDodge(void);
-	void UpdateDamage(void);
-	void UpdateDeath(void);
 };
