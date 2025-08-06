@@ -195,7 +195,7 @@ void GameScene::Draw(void)
 	player_->Draw();
 
 	// “G•`‰æ
-	midBoss_->Draw();
+	//midBoss_->Draw();
 
 	// ƒRƒ‰ƒCƒ_[‚Ì•`‰æ
 	//colMng_->DrawColliders();

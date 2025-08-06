@@ -7,6 +7,7 @@
 #include "../Manager/InputManager.h"
 #include "../Utility/Utility.h"
 #include "../Object/Transform.h"
+#include "../Object/Unit/Player.h"
 //#include "../Object/Common/Collider/ColliderController.h"
 #include "Camera.h"
 
@@ -67,6 +68,7 @@ Camera::Camera(void)
 	:
 	followTransform_(nullptr),
 	mode_(MODE::FIXED_POINT),
+	isRotatingBehind_(false),
 	pos_{},
 	prePos_{},
 	angles_{},
@@ -93,7 +95,7 @@ Camera::Camera(void)
 	modeUpdate_{},
 	setBeforeDrawMode_{}
 {
-
+	player_ = std::make_shared<Player>();
 	modeChanges_.emplace(MODE::FIXED_POINT, bind(&Camera::ChangeFixedPoint, this));
 	modeChanges_.emplace(MODE::FREE, bind(&Camera::ChangeFree, this));
 	modeChanges_.emplace(MODE::FOLLOW, bind(&Camera::ChangeFollow, this));
@@ -118,6 +120,8 @@ void Camera::Init(void)
 	localPosMouseFollow_ = LOCAL_POS_TARGET_CAMERA_MOUSEFOLLOW;
 	specialTimeStep_ = 0.0f;
 	specialDuration_ = 2.0f;
+	rotateTimer_ = 0.0f;
+	rotateTime_ = 0.6f;
 	ChangeMode(MODE::FIXED_POINT);
 
 }
@@ -746,45 +750,57 @@ void Camera::UpdateSpecial(void)
 {
 	const float delta = 1.0f / 60.0f;
 	specialTimeStep_ += delta;
-	float t = specialTimeStep_ / specialDuration_;
 
-	if (t < 0.08f) {
-		// 1. 元のカメラ位置から少しズームアウト
-		float zoomOut = 1.0f + 0.5f * (t / 0.08f);
-		VECTOR dir = VNorm(VSub(specialStartEye_, specialPlayerPos_));
-		float dist = VSize(VSub(specialStartEye_, specialPlayerPos_));
-		pos_ = VAdd(specialPlayerPos_, VScale(dir, dist * zoomOut));
+	float zoomTime = 2.0f;
+	float rotateTime = 1.6f;
+
+	VECTOR right = followTransform_->GetRight();
+	VECTOR down = followTransform_->GetDown();
+	VECTOR forward = followTransform_->GetForward();
+	VECTOR back = followTransform_->GetBack();
+
+	VECTOR startOffset = VAdd(VAdd(VScale(right, 100.0f), VScale(down, 0.0f)), VScale(forward, 300.0f));
+	VECTOR endOffset = VAdd(VAdd(VScale(right, 0.0f), VScale(down, 10.0f)), VScale(back, 80.0f));
+	VECTOR zoomTarget = specialPlayerPos_; // ズームインの最終到達点
+	VECTOR rotateStartPos; // 回転開始時のカメラ位置
+	VECTOR endPos = VAdd(specialPlayerPos_, endOffset);
+
+	static bool isRotatePhase = false;
+	static VECTOR rotatePhaseStartPos;
+
+	if (!isRotatePhase) {
+		// ズームイン
+		float t = (std::min)(specialTimeStep_ / zoomTime, 1.0f);
+		pos_.x = startOffset.x * (1.0f - t) + zoomTarget.x * t;
+		pos_.y = startOffset.y * (1.0f - t) + zoomTarget.y * t + 5.0f;
+		pos_.z = startOffset.z * (1.0f - t) + zoomTarget.z * t;
 		targetPos_ = specialPlayerPos_;
+
+		// ズームイン終了時に回転開始位置を記録
+		if (t >= 1.0f) {
+			isRotatePhase = true;
+			rotateTimer_ = 0.0f;
+			rotatePhaseStartPos = pos_; // 現在のカメラ位置を回転開始位置に
+		}
 	}
-	//else if (t < 0.28f) {
-	//	// 2. プレイヤーの右下後方へカメラを移動
-	//	float lerp = (t - 0.08f) / 0.2f;
-	//	// プレイヤーのローカル軸で右下後方を計算
-	//	VECTOR right = followTransform_->GetRight();
-	//	VECTOR down = followTransform_->GetDown();
-	//	VECTOR back = followTransform_->GetBack();
-	//	VECTOR offset = VAdd(VAdd(VScale(right, 15.0f), VScale(down, 6.0f)), VScale(back, 10.0f));
-	//	VECTOR targetPos = VAdd(specialPlayerPos_, offset);
-	//	pos_ = {
-	//		specialStartEye_.x * (1.0f - lerp) + targetPos.x * lerp,
-	//		specialStartEye_.y * (1.0f - lerp) + targetPos.y * lerp,
-	//		specialStartEye_.z * (1.0f - lerp) + targetPos.z * lerp
-	//	};
-	//	targetPos_ = specialPlayerPos_;
-	//}
-	else if (t < 0.5f) {
-		// 3. 完全に右下後方から固定
-		VECTOR right = followTransform_->GetRight();
-		VECTOR down = followTransform_->GetDown();
-		VECTOR back = followTransform_->GetBack();
-		VECTOR offset = VAdd(VAdd(VScale(right, 15.0f), VScale(down, 8.0f)), VScale(back, 40.0f));
-		pos_ = VAdd(specialPlayerPos_, offset);
+	else if (rotateTimer_ < rotateTime) {
+		// 回転
+		rotateTimer_ += delta;
+		float t = (std::min)(rotateTimer_ / rotateTime, 1.0f);
+		pos_.x = rotatePhaseStartPos.x * (1.0f - t) + endPos.x * t;
+		pos_.y = rotatePhaseStartPos.y * (1.0f - t) + endPos.y * t;
+		pos_.z = rotatePhaseStartPos.z * (1.0f - t) + endPos.z * t;
 		targetPos_ = specialPlayerPos_;
-	}
-	else {
-		ChangeMode(MODE::FOLLOW);
+
+		if (t >= 1.0f) {
+			pos_ = endPos;
+			targetPos_ = specialPlayerPos_;
+			isRotatePhase = false;
+			ChangeMode(MODE::FOLLOW);
+		}
 	}
 }
+
 void Camera::SetBeforeDrawFixedPoint(void)
 {
 

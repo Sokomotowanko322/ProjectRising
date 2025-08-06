@@ -5,6 +5,7 @@
 #include "../Common/Quaternion.h"
 #include "../Common/Geometry2D.h"
 
+class Player;
 class Transform;
 //class ColliderController;
 
@@ -169,6 +170,9 @@ private:
 	// カメラが追従対象とするTransform
 	const Transform* followTransform_;
 
+	// プレイヤー
+	std::shared_ptr<Player> player_;
+
 	// カメラモード
 	MODE mode_;
 
@@ -213,6 +217,13 @@ private:
 
 	//カメラシェイクしているか
 	bool isShake_;
+
+	// 背後に回りきっているかどうか
+	bool isRotatingBehind_;
+	
+	// 回転の時間
+	float rotateTime_;
+	float rotateTimer_;
 
 	//カメラシェイク時の経過時間
 	float shakeStep_;

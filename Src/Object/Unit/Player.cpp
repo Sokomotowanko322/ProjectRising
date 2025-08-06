@@ -336,11 +336,9 @@ void Player::ProcessSpecialAttack(void)
 	if (stepAnim > 76.0f)
 	{
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::SPECIAL_ATTACK]);
+		currentAnimType_ = ANIM_TYPE::SPECIAL_ATTACK;
 	}
-	if (animationController_->IsEndBlendingPlayAnimation("CHARGE") && isCharging_)
-	{
-		
-	}
+	
 	if (animationController_->IsEndBlendingPlayAnimation("SPECIAL_ATTACK"))
 	{
 		isSpAttacking_ = false;
@@ -482,6 +480,11 @@ void Player::StartSlow(float time, float speed)
 bool Player::IsAttack() const
 {
 	return isAttack_;
+}
+
+bool Player::IsSpecialAttack() const
+{
+	return isSpAttacking_;
 }
 
 void Player::InitAnimation(void)

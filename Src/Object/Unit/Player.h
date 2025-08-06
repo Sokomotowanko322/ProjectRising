@@ -66,6 +66,7 @@ public:
 	// æ“¾Œn
 	std::shared_ptr<Weapon> GetWeapon() const;
 	ANIM_TYPE GetCurrentAnimType() const;
+	ANIM_TYPE GetNowAnim() const;
 	const VECTOR& GetRightHandPos() const;
 	VECTOR GetPos() const override;
 	VECTOR GetCenterPos() const;
@@ -84,6 +85,7 @@ public:
 
 	// UŒ‚ó‘Ô‚©‚Ç‚¤‚©
 	bool IsAttack() const;
+	bool IsSpecialAttack() const;
 
 	// ƒRƒ‰ƒCƒ_‘¤‚Å‘ã“ü‚Å‚«‚é‚æ‚¤‚É‚·‚é
 	bool isGrounded_;
