@@ -66,10 +66,9 @@ public:
 	// 取得系
 	std::shared_ptr<Weapon> GetWeapon() const;
 	ANIM_TYPE GetCurrentAnimType() const;
-	ANIM_TYPE GetNowAnim() const;
 	const VECTOR& GetRightHandPos() const;
 	VECTOR GetPos() const override;
-	VECTOR GetCenterPos() const;
+	const VECTOR& GetCenterPos() const;
 
 	// ヒット時のエフェクト
 	void HitEffect(VECTOR pos);
@@ -84,8 +83,10 @@ public:
 	void StartSlow(float time,float speed);
 
 	// 攻撃状態かどうか
-	bool IsAttack() const;
-	bool IsSpecialAttack() const;
+	const bool IsAttack() const;
+	const bool IsSpecialAttack() const;
+	const bool StartCameraMove() const;
+	const bool IsCharge() const;
 
 	// コライダ側で代入できるようにする
 	bool isGrounded_;
@@ -147,6 +148,9 @@ private:
 	// プレイヤーの移動速度
 	float moveSpeed_;
 
+	// 必殺発動時の演出用
+	float stepSpAttack_;
+
 	// エフェクトの再生用
 	int hitEfResId_;
 	int hitEfPlayId_;
@@ -169,7 +173,8 @@ private:
 	bool isInvincible_;
 	bool isDodging_;
 	bool isCharging_;
-	bool isSpAttacking_;
+	bool startCameramove_;
+	bool isSpAttack_;
 	bool isHitStop_;
 	
 	// アニメーションの初期化

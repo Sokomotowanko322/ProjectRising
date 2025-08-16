@@ -95,7 +95,6 @@ Camera::Camera(void)
 	modeUpdate_{},
 	setBeforeDrawMode_{}
 {
-	player_ = std::make_shared<Player>();
 	modeChanges_.emplace(MODE::FIXED_POINT, bind(&Camera::ChangeFixedPoint, this));
 	modeChanges_.emplace(MODE::FREE, bind(&Camera::ChangeFree, this));
 	modeChanges_.emplace(MODE::FOLLOW, bind(&Camera::ChangeFollow, this));
@@ -122,6 +121,8 @@ void Camera::Init(void)
 	specialDuration_ = 2.0f;
 	rotateTimer_ = 0.0f;
 	rotateTime_ = 0.6f;
+
+	// カメラの初期化
 	ChangeMode(MODE::FIXED_POINT);
 
 }
@@ -132,7 +133,6 @@ void Camera::Update(void)
 	modeUpdate_();
 	CameraShake();
 
-	
 }
 
 void Camera::SetBeforeDraw(void)
@@ -182,7 +182,10 @@ void Camera::SetSuccessCameraMoveEndFunc(std::function<void(void)> func)
 void Camera::SetCameraShake(float time, float shakePow, float timeScale)
 {
 
-	if (isShake_) { return; }
+	if (isShake_) 
+	{ 
+		return; 
+	}
 
 	isShake_ = true;
 	shakeStep_ = time;
@@ -193,31 +196,26 @@ void Camera::SetCameraShake(float time, float shakePow, float timeScale)
 
 void Camera::CameraShake(void)
 {
+	if (!isShake_) return;
 
-	const int mod = 3;
-	const int subVal = 1;
+	// 残り時間に応じて減衰
+	float progress = 1.0f - (shakeStep_ / (shakeStep_ + TimeManager::GetInstance().GetDeltaTime()));
+	float currentPow = shakePow_ * (1.0f - progress);
 
-	if (!isShake_) { return; }
+	// -1.0f～1.0fの乱数
+	float randX = (rand() % 2001 - 1000) / 1000.0f;
+	float randY = (rand() % 2001 - 1000) / 1000.0f;
 
-	Vector2f shakePos = { pos_.x,pos_.y };
+	// 揺れ量を一時保存
+	prePos_.x = randX * currentPow;
+	prePos_.y = randY * currentPow;
 
-	Vector2 pow = Vector2(
-		(int)(shakeStep_ * timeScale_) % mod - subVal,
-		(int)(shakeStep_ * timeScale_) % mod - subVal
-	);
-
-	Vector2f shakeMove = ToVector2f(pow) * shakePow_;
-	shakePos += shakeMove;
-
-	pos_.x = shakePos.x;
-	pos_.y = shakePos.y;
-
-	shakeStep_ -= TimeManager::GetInstance().GetDeltaTime();
-	if (shakeStep_ < INIT_STEP_CAMERASHAKE)
-	{
+	shakeStep_ -= TimeManager::GetInstance().GetDeltaTime() * timeScale_;
+	if (shakeStep_ <= 0.0f) {
 		isShake_ = false;
+		prePos_.x = 0.0f;
+		prePos_.y = 0.0f;
 	}
-
 }
 
 void Camera::StartSpecialCamera(const VECTOR& playerPos, const VECTOR& enemyPos, float duration)
@@ -234,6 +232,11 @@ void Camera::StartSpecialCamera(const VECTOR& playerPos, const VECTOR& enemyPos,
 bool Camera::IsSpecialCameraActive() const
 {
 	return mode_ == MODE::SPECIAL;
+}
+
+void Camera::SetPlayer(std::shared_ptr<Player> player)
+{
+	player_ = player;
 }
 
 void Camera::SetDefQuaRot(const Quaternion& qua)
@@ -751,7 +754,7 @@ void Camera::UpdateSpecial(void)
 	const float delta = 1.0f / 60.0f;
 	specialTimeStep_ += delta;
 
-	float zoomTime = 2.0f;
+	float zoomTime = 1.7f;
 	float rotateTime = 1.6f;
 
 	VECTOR right = followTransform_->GetRight();
@@ -760,13 +763,20 @@ void Camera::UpdateSpecial(void)
 	VECTOR back = followTransform_->GetBack();
 
 	VECTOR startOffset = VAdd(VAdd(VScale(right, 100.0f), VScale(down, 0.0f)), VScale(forward, 300.0f));
-	VECTOR endOffset = VAdd(VAdd(VScale(right, 0.0f), VScale(down, 10.0f)), VScale(back, 80.0f));
-	VECTOR zoomTarget = specialPlayerPos_; // ズームインの最終到達点
+	VECTOR endOffset = VAdd(VAdd(VScale(right, 22.0f), VScale(down, 10.0f)), VScale(back, 40.0f));
+	VECTOR zoomTarget = VAdd(specialPlayerPos_, VScale(followTransform_->GetBack(), 80.0f)); // ←ここを追加・修正
 	VECTOR rotateStartPos; // 回転開始時のカメラ位置
 	VECTOR endPos = VAdd(specialPlayerPos_, endOffset);
 
 	static bool isRotatePhase = false;
 	static VECTOR rotatePhaseStartPos;
+
+	// ここでシェイク開始
+	if (player_.lock()->IsSpecialAttack() && !isShake_)
+	{
+		SetCameraShake(0.1f, 0.5f, 1.0f); // 例: 0.3秒, 強さ5, タイムスケール1
+		CameraShake();
+	}
 
 	if (!isRotatePhase) {
 		// ズームイン
@@ -791,7 +801,7 @@ void Camera::UpdateSpecial(void)
 		pos_.y = rotatePhaseStartPos.y * (1.0f - t) + endPos.y * t;
 		pos_.z = rotatePhaseStartPos.z * (1.0f - t) + endPos.z * t;
 		targetPos_ = specialPlayerPos_;
-
+		
 		if (t >= 1.0f) {
 			pos_ = endPos;
 			targetPos_ = specialPlayerPos_;
@@ -823,7 +833,7 @@ void Camera::SetBeforeDrawFree(void)
 
 void Camera::SetBeforeDrawFollow(void)
 {
-
+	
 	// カメラの設定(位置と注視点による制御)
 	SetCameraPositionAndTargetAndUpVec(
 		pos_,
@@ -835,7 +845,7 @@ void Camera::SetBeforeDrawFollow(void)
 
 void Camera::SetBeforeDrawFollowFix(void)
 {
-
+	
 	// カメラの設定(位置と注視点による制御)
 	SetCameraPositionAndTargetAndUpVec(
 		pos_,
@@ -871,9 +881,12 @@ void Camera::SetBeforeDrawSuccessful(void)
 
 void Camera::SetBeforeDrawSpecial(void)
 {
-	SetCameraPositionAndTarget_UpVecY(
-		pos_, 
-		targetPos_);
+	VECTOR shakePos = VAdd(pos_, prePos_);
+	SetCameraPositionAndTargetAndUpVec(
+		shakePos,
+		targetPos_,
+		cameraUp_
+	);
 }
 
 void Camera::DrawDebug(void)

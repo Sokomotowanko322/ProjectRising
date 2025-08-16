@@ -165,13 +165,16 @@ public:
 	void StartSpecialCamera(const VECTOR& playerPos, const VECTOR& enemyPos, float duration);
 	bool IsSpecialCameraActive() const;
 
+	// weak参照用のPlayer
+	void SetPlayer(std::shared_ptr<Player> player);
+
 private:
 
 	// カメラが追従対象とするTransform
 	const Transform* followTransform_;
 
 	// プレイヤー
-	std::shared_ptr<Player> player_;
+	std::weak_ptr<Player> player_;
 
 	// カメラモード
 	MODE mode_;

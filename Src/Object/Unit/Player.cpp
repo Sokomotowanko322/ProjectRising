@@ -56,11 +56,12 @@ isAttack_(false),
 isInvincible_(false),
 isDodging_(false),
 isCharging_(false),
-isSpAttacking_(false),
+isSpAttack_(false),
 isHitStop_(false),
 readyHighTime_(false),
 preForwardPressed_(false),
 preBackPressed_(false),
+startCameramove_(false),
 armAnimId_(-1),
 frameNo_(-1),
 legsAnimId_(-1),
@@ -200,7 +201,7 @@ void Player::InputControl(void)
 
 	}
 	// 攻撃アニメーション中は他の入力を受け付けないようにする
-	if (isAttack_)
+	if (isAttack_ || isSpAttack_)
 	{
 
 		weapon_->StartEffect();
@@ -211,6 +212,7 @@ void Player::InputControl(void)
 			animationController_->IsEndBlendingPlayAnimation("FIRST_COMBO"))
 		{
 			isAttack_ = false;
+			isSpAttack_ = false;
 			currentAnimType_ = ANIM_TYPE::IDLE;
 		}
 		else
@@ -322,9 +324,8 @@ void Player::ProcessSpecialAttack(void)
 	auto& ins = InputManager::GetInstance();
 
 	// 特殊攻撃
-	if (ins.IsTriggered(InputManager::ACTION::SPECIAL_ATTACK) && !isSpAttacking_ && !isAttack_)
+	if (ins.IsTriggered(InputManager::ACTION::SPECIAL_ATTACK) && !isSpAttack_ && !isAttack_)
 	{
-		isSpAttacking_ = true;
 		isCharging_ = true;
 		isAttack_ = true;
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::CHARGE]);
@@ -332,20 +333,14 @@ void Player::ProcessSpecialAttack(void)
 		return;
 	}
 
-	float stepAnim = animationController_->GetAnimData(ANIM_DATA_KEY[(int)ANIM_TYPE::CHARGE]).stepAnim;
-	if (stepAnim > 76.0f)
+	float stepChargeAnim = animationController_->GetAnimData(ANIM_DATA_KEY[(int)ANIM_TYPE::CHARGE]).stepAnim;
+	float stepSpecialAttackAnim = animationController_->GetAnimData(ANIM_DATA_KEY[(int)ANIM_TYPE::SPECIAL_ATTACK]).stepAnim;
+	if (stepChargeAnim >= 76.0f)
 	{
+		isSpAttack_ = true;
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::SPECIAL_ATTACK]);
 		currentAnimType_ = ANIM_TYPE::SPECIAL_ATTACK;
-	}
-	
-	if (animationController_->IsEndBlendingPlayAnimation("SPECIAL_ATTACK"))
-	{
-		isSpAttacking_ = false;
 		isCharging_ = false;
-		currentAnimType_ = ANIM_TYPE::IDLE;
-		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::IDLE]);
-		return;
 	}
 }
 
@@ -430,7 +425,7 @@ VECTOR Player::GetPos() const
 	return transform_.pos;
 }
 
-VECTOR Player::GetCenterPos() const
+const VECTOR& Player::GetCenterPos() const
 {
 	return waistPos_;
 }
@@ -477,14 +472,24 @@ void Player::StartSlow(float time, float speed)
 	isSlow_ = true;
 }
 
-bool Player::IsAttack() const
+const bool Player::IsAttack() const
 {
 	return isAttack_;
 }
 
-bool Player::IsSpecialAttack() const
+const bool Player::IsSpecialAttack() const
 {
-	return isSpAttacking_;
+	return isSpAttack_;
+}
+
+const bool Player::StartCameraMove() const
+{
+	return startCameramove_;
+}
+
+const bool Player::IsCharge() const
+{
+	return isCharging_;
 }
 
 void Player::InitAnimation(void)

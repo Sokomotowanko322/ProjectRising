@@ -237,6 +237,14 @@ void SceneManager::DoChangeScene(SCENE_ID sceneId)
 
 	scene_->Init();
 
+	// GameSceneの場合のみPlayerをCameraにセット(weak参照のため)
+	if (sceneId_ == SCENE_ID::GAME) {
+		auto* gameScene = dynamic_cast<GameScene*>(scene_.get());
+		if (gameScene) {
+			camera_->SetPlayer(gameScene->GetPlayer());
+		}
+	}
+
 	ResetDeltaTime();
 
 	waitSceneId_ = SCENE_ID::NONE;

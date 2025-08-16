@@ -56,7 +56,7 @@ void GameScene::Init(void)
 	// ÉJÉÅÉâÇÃèâä˙âª
 	mainCamera.SetFollow(&player_->GetTransform());
 	mainCamera.ChangeMode(Camera::MODE::FOLLOW);
-
+		
 	// ÉQÅ[ÉÄì‡BGM
 	gameBgm_ = resMng_.Load(ResourceManager::SRC::SOUND_TITLEBGM).handleId_;
 	PlaySoundMem(gameBgm_, DX_PLAYTYPE_BACK);

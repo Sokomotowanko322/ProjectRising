@@ -17,6 +17,12 @@ public:
 	// デストラクタ
 	~GameScene(void);
 
+	// 参照切れ防止用
+	std::shared_ptr<Player> GetPlayer() const 
+	{ 
+		return player_; 
+	}
+
 	// 初期化
 	void Init(void) override;
 
