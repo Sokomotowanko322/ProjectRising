@@ -15,6 +15,7 @@ static const std::unordered_map<Player::ANIM_TYPE, std::function<void(MidBoss*, 
 
 void ColliderManager::RegisterActor(const std::shared_ptr<ActorBase>& actor)
 {
+	// ‚»‚ê‚¼‚ê‚Ìî•ñ‚ğ“o˜^
     actors_.push_back(actor);
 }
 

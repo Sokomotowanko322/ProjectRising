@@ -85,9 +85,9 @@ public:
 	// 攻撃状態かどうか
 	const bool IsAttack() const;
 	const bool IsSpecialAttack() const;
-	const bool StartCameraMove() const;
-	const bool IsCharge() const;
-
+	const bool CameraMoveStart() const;
+	const bool CameraShakeActive() const;
+	
 	// コライダ側で代入できるようにする
 	bool isGrounded_;
 
@@ -117,6 +117,9 @@ private:
 
 	// モデル衝突判定用の腰の位置
 	VECTOR waistPos_;
+
+	// 前フレームのルート位置
+	VECTOR prevRootPos_;
 
 	// 移動方向
 	VECTOR moveDir_;
@@ -173,13 +176,17 @@ private:
 	bool isInvincible_;
 	bool isDodging_;
 	bool isCharging_;
-	bool startCameramove_;
+	bool cameraMoveStart_;
+	bool cameraShakeActive_;
 	bool isSpAttack_;
 	bool isHitStop_;
 	
 	// アニメーションの初期化
 	void InitAnimation(void);
 	
+	// アニメーションの動きと位置を連動
+	void ApplyRootMotion(void);
+
 	// ブレンドテスト
 	void BlendAnimation(void);
 

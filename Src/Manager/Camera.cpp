@@ -131,7 +131,7 @@ void Camera::Update(void)
 {
 	// カメラ更新
 	modeUpdate_();
-	CameraShake();
+	//CameraShake();
 
 }
 
@@ -313,7 +313,7 @@ void Camera::SyncFollow(void)
 	VECTOR localTarget = rotOutX_.PosAxis(LOCAL_POS_FOLLOWER_TARGET);
 	targetPos_ = VAdd(pos, localTarget);
 
-	// 目標のカメラ相対座標を決定
+	// ダッシュ時相対座標を決定
 	VECTOR targetLocalPos;
 	if (InputManager::GetInstance().IsPressed(InputManager::ACTION::RUN)) 
 	{
@@ -325,7 +325,7 @@ void Camera::SyncFollow(void)
 	}
 
 	// 線形補間（Lerp）で滑らかに移動
-	const float lerpSpeed = 0.1f; // 値を大きくすると速く切り替わる
+	const float lerpSpeed = 0.2f; // 値を大きくすると速く切り替わる
 	currentLocalPos_.x += (targetLocalPos.x - currentLocalPos_.x) * lerpSpeed;
 	currentLocalPos_.y += (targetLocalPos.y - currentLocalPos_.y) * lerpSpeed;
 	currentLocalPos_.z += (targetLocalPos.z - currentLocalPos_.z) * lerpSpeed;
@@ -772,13 +772,14 @@ void Camera::UpdateSpecial(void)
 	static VECTOR rotatePhaseStartPos;
 
 	// ここでシェイク開始
-	if (player_.lock()->IsSpecialAttack() && !isShake_)
+	if (player_.lock()->CameraShakeActive() && !isShake_)
 	{
-		SetCameraShake(0.1f, 0.5f, 1.0f); // 例: 0.3秒, 強さ5, タイムスケール1
+		SetCameraShake(0.1f,5.0f, 1.0f); // 例: 0.3秒, 強さ5, タイムスケール1
 		CameraShake();
 	}
 
-	if (!isRotatePhase) {
+	if (!isRotatePhase) 
+	{
 		// ズームイン
 		float t = (std::min)(specialTimeStep_ / zoomTime, 1.0f);
 		pos_.x = startOffset.x * (1.0f - t) + zoomTarget.x * t;
@@ -793,7 +794,8 @@ void Camera::UpdateSpecial(void)
 			rotatePhaseStartPos = pos_; // 現在のカメラ位置を回転開始位置に
 		}
 	}
-	else if (rotateTimer_ < rotateTime) {
+	else if (rotateTimer_ < rotateTime) 
+	{
 		// 回転
 		rotateTimer_ += delta;
 		float t = (std::min)(rotateTimer_ / rotateTime, 1.0f);
@@ -802,7 +804,8 @@ void Camera::UpdateSpecial(void)
 		pos_.z = rotatePhaseStartPos.z * (1.0f - t) + endPos.z * t;
 		targetPos_ = specialPlayerPos_;
 		
-		if (t >= 1.0f) {
+		if (t >= 1.0f)
+		{
 			pos_ = endPos;
 			targetPos_ = specialPlayerPos_;
 			isRotatePhase = false;

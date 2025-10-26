@@ -58,8 +58,8 @@ void GameScene::Init(void)
 	mainCamera.ChangeMode(Camera::MODE::FOLLOW);
 		
 	// ゲーム内BGM
-	gameBgm_ = resMng_.Load(ResourceManager::SRC::SOUND_TITLEBGM).handleId_;
-	PlaySoundMem(gameBgm_, DX_PLAYTYPE_BACK);
+	/*gameBgm_ = resMng_.Load(ResourceManager::SRC::SOUND_TITLEBGM).handleId_;
+	PlaySoundMem(gameBgm_, DX_PLAYTYPE_BACK);*/
 
 	// ゲーム内時間
 	gameTime_ = 0.0f;
@@ -177,7 +177,7 @@ void GameScene::Update(void)
 	player_->Update();
 
 	// 敵の更新
-	midBoss_->Update();
+	//midBoss_->Update();
 
 	// コライダ更新
 	colMng_->Update();

@@ -61,7 +61,8 @@ isHitStop_(false),
 readyHighTime_(false),
 preForwardPressed_(false),
 preBackPressed_(false),
-startCameramove_(false),
+cameraMoveStart_(false),
+cameraShakeActive_(false),
 armAnimId_(-1),
 frameNo_(-1),
 legsAnimId_(-1),
@@ -111,8 +112,9 @@ void Player::Init(void)
 	// 武器追従のためフレームを取得
 	rightHandFrame_ = MV1SearchFrame(transform_.modelId, "mixamorig:RightHandMiddle1");
 
-	// 移動地無効化用
+	// root位置取得用
 	frameNo_ = MV1SearchFrame(transform_.modelId, FRAME_HIPS);
+	prevRootPos_ = MV1GetFramePosition(transform_.modelId, frameNo_);
 
 	// ブレンド用アニメーションのアタッチ
 	legsAnimId_ = MV1AttachAnim(transform_.modelId, (int)ANIM_TYPE::DASH, -1, false);
@@ -155,17 +157,16 @@ void Player::Update(void)
 	// アニメーションの更新
 	animationController_->Update();
 
+	// RootMotionの適用
+	ApplyRootMotion();
+
 	// 腰のフレーム位置を取得し続ける
 	waistPos_ = MV1GetFramePosition(transform_.modelId, waistFrame_);
 
 	// 左手のフレーム位置を取得し続ける
 	rightHandPos_ = MV1GetFramePosition(transform_.modelId, rightHandFrame_);
 
-	// 重力をかける
-	isGrounded_ = false;
-	CalculateGravity();
-
-	// 移動量の初期化
+	// 移動量リセット
 	moveDir_ = Utility::VECTOR_ZERO;
 	movePow_ = Utility::VECTOR_ZERO;
 
@@ -176,6 +177,10 @@ void Player::Update(void)
 
 	// 回転させる
 	transform_.quaRot = playerRotY_;
+
+	// 重力をかける
+	//isGrounded_ = false;
+	CalculateGravity();
 
 	// 武器の位置をプレイヤーの右手に設定
 	weapon_->GameUpdate(transform_);
@@ -198,7 +203,6 @@ void Player::InputControl(void)
 	{
 		weapon_->StopEffect();
 		colMng_->ResetHitCount();
-
 	}
 	// 攻撃アニメーション中は他の入力を受け付けないようにする
 	if (isAttack_ || isSpAttack_)
@@ -213,6 +217,7 @@ void Player::InputControl(void)
 		{
 			isAttack_ = false;
 			isSpAttack_ = false;
+			/*cameraShakeActive_ = false;*/
 			currentAnimType_ = ANIM_TYPE::IDLE;
 		}
 		else
@@ -328,6 +333,7 @@ void Player::ProcessSpecialAttack(void)
 	{
 		isCharging_ = true;
 		isAttack_ = true;
+		cameraMoveStart_ = true;
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::CHARGE]);
 		currentAnimType_ = ANIM_TYPE::CHARGE;
 		return;
@@ -338,9 +344,14 @@ void Player::ProcessSpecialAttack(void)
 	if (stepChargeAnim >= 76.0f)
 	{
 		isSpAttack_ = true;
+		isCharging_ = false;
 		animationController_->ChangeAnimation(ANIM_DATA_KEY[(int)ANIM_TYPE::SPECIAL_ATTACK]);
 		currentAnimType_ = ANIM_TYPE::SPECIAL_ATTACK;
-		isCharging_ = false;
+	}
+	if (stepSpecialAttackAnim >= 68.0f)
+	{
+		cameraShakeActive_ = true;
+
 	}
 }
 
@@ -482,14 +493,14 @@ const bool Player::IsSpecialAttack() const
 	return isSpAttack_;
 }
 
-const bool Player::StartCameraMove() const
+const bool Player::CameraMoveStart() const
 {
-	return startCameramove_;
+	return cameraMoveStart_;
 }
 
-const bool Player::IsCharge() const
+const bool Player::CameraShakeActive() const
 {
-	return isCharging_;
+	return cameraShakeActive_;
 }
 
 void Player::InitAnimation(void)
@@ -530,6 +541,24 @@ void Player::InitAnimation(void)
 
 	animationController_->Add("HASWEAPON", path + "HasWeapon.mv1",
 		0.0f, NORMAL_ANIM_SPEED, resMng_.LoadModelDuplicate(ResourceManager::SRC::PLAYER_HASARM), true, 0, false);
+}
+
+void Player::ApplyRootMotion(void)
+{
+	// ルートボーンまたは腰ボーンの現在位置を取得
+    VECTOR currentRootPos = MV1GetFramePosition(transform_.modelId, frameNo_);
+
+    // 差分を計算
+    VECTOR delta = VSub(currentRootPos, prevRootPos_);
+
+	// Y方向は無視
+	delta.y = 0.0f;
+	
+    // Transformに反映
+    transform_.pos = VAdd(transform_.pos, delta);
+
+    // 今回の位置を保存
+    prevRootPos_ = currentRootPos;
 }
 
 void Player::BlendAnimation(void)
@@ -627,18 +656,3 @@ void Player::Rotate(void)
 	playerRotY_ = Quaternion::Slerp(
 		playerRotY_, goalQuaRot_, (TIME_ROT - stepRotTime_) / TIME_ROT);
 }
-
-//
-//void Player::CalculateGravity(void)
-//{
-//	// 例: Player/NormalEnemyのUpdate()内
-//	constexpr float GRAVITY = -0.01f; // 重力加速度（調整可）
-//
-//	// 空中なら重力を加算
-//	velocity_.y += GRAVITY;
-//
-//	// 速度を位置に反映
-//	VECTOR pos = transform_.pos;
-//	pos.y += velocity_.y;
-//	SetPos(pos);
-//}
